@@ -7,7 +7,7 @@ from app.ai.nvidia import LLM
 from app.ai.intent_router import IntentRouter
 from app.ai.prompts import SYSTEM_PROMPT
 from app.schemas.ai import AICompletionRequest, AICompletionResponse
-from app.schemas.intent import IntentResult
+from app.schemas.intent import RequestTriageResult
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -16,7 +16,7 @@ _llm = LLM()
 _intent_router = IntentRouter(llm=_llm)
 
 
-@router.post("/ai/intent", response_model=IntentResult)
+@router.post("/ai/intent", response_model=RequestTriageResult)
 async def classify_intent(request: AICompletionRequest):
     return await _intent_router.classify(request.message)
 

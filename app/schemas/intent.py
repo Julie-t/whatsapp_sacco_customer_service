@@ -1,24 +1,19 @@
-from enum import Enum
-
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
-class Intent(str, Enum):
-    GREETING = "greeting"
-    FINANCIAL_EDUCATION = "financial_education"
-    SACCO_INFORMATION = "sacco_information"
-    GOAL_MANAGEMENT = "goal_management"
-    HUMAN_SUPPORT = "human_support"
-    UNKNOWN = "unknown"
-
-
-class IntentResult(BaseModel):
-    intent: Intent
-    confidence: float = Field(ge=0.0, le=1.0)
-    language: Literal["en", "sw", "unknown"]
+class RequestTriageResult(BaseModel):
+    language: Literal["en", "sw", "mixed"]
+    needs_member_data: bool
+    likely_needs_human: bool
+    reasoning: str
 
     @classmethod
-    def fallback(cls) -> "IntentResult":
-        return cls(intent=Intent.UNKNOWN, confidence=0.0, language="unknown")
+    def fallback(cls) -> "RequestTriageResult":
+        return cls(
+            language="mixed",
+            needs_member_data=False,
+            likely_needs_human=True,
+            reasoning="The request could not be reliably classified for routing.",
+        )

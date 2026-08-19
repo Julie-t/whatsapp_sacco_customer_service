@@ -1,89 +1,176 @@
 import asyncio
 from unittest.mock import AsyncMock
 
-import pytest
 from fastapi.testclient import TestClient
 
 from app.ai.intent_router import IntentRouter
+from app.ai.prompts import ROUTER_PROMPT
 from app.api.routes import ai as ai_route
 from app.main import app
-from app.schemas.intent import Intent, IntentResult
+from app.schemas.intent import RequestTriageResult
 from app.schemas.message import IncomingWhatsAppMessage
-from app.services.conversation_service import handle_message_async
+from app.services.conversation_service import (
+    GENERAL_ASSISTANCE_PLACEHOLDER,
+    HUMAN_SUPPORT_PLACEHOLDER,
+    MEMBER_DATA_PLACEHOLDER,
+    handle_message_async,
+)
 
 
 class FakeLLM:
     def __init__(self, response: str):
         self.response = response
+        self.messages = None
 
     async def generate(self, messages):
+        self.messages = messages
         return self.response
 
 
-def classify(response: str) -> IntentResult:
+def triage(response: str) -> RequestTriageResult:
     return asyncio.run(IntentRouter(FakeLLM(response)).classify("test"))
 
 
-@pytest.mark.parametrize(
-    ("message", "intent", "language"),
-    [
-        ("Hello", Intent.GREETING, "en"),
-        ("What is compound interest?", Intent.FINANCIAL_EDUCATION, "en"),
-        ("What loans do you offer?", Intent.SACCO_INFORMATION, "en"),
-        ("I want to save for my daughter's university.", Intent.GOAL_MANAGEMENT, "en"),
-        ("I want to talk to a person.", Intent.HUMAN_SUPPORT, "en"),
-        ("asdfgh", Intent.UNKNOWN, "unknown"),
-        ("Habari", Intent.GREETING, "sw"),
-        ("Nifundishe kuhusu savings", Intent.FINANCIAL_EDUCATION, "sw"),
-        ("Nataka kujua kuhusu mikopo", Intent.SACCO_INFORMATION, "sw"),
-        ("Nataka kuweka akiba kwa ajili ya mtoto wangu", Intent.GOAL_MANAGEMENT, "sw"),
-        ("Nataka kuongea na mtu", Intent.HUMAN_SUPPORT, "sw"),
-    ],
-)
-def test_intent_router_validates_supported_intents(message, intent, language):
-    result = classify(
-        f'{{"intent":"{intent.value}","confidence":0.94,"language":"{language}"}}'
+def test_router_uses_open_ended_triage_prompt():
+    llm = FakeLLM(
+        '{"language":"en","needs_member_data":false,'
+        '"likely_needs_human":false,"reasoning":"General education question."}'
     )
-    assert result.intent == intent
-    assert result.confidence == 0.94
-    assert result.language == language
+
+    asyncio.run(IntentRouter(llm).classify("What is compound interest?"))
+
+    assert llm.messages[0] == {"role": "system", "content": ROUTER_PROMPT}
 
 
-@pytest.mark.parametrize(
-    "response",
-    [
-        "This is financial education.",
-        '{"intent":"something_not_supported","confidence":2.7}',
-        '{"intent":"financial_education",',
-        '{"intent":"financial_education","confidence":0.8,"language":"fr"}',
-    ],
-)
-def test_malformed_or_unsupported_output_returns_safe_fallback(response):
-    assert classify(response) == IntentResult.fallback()
+def test_general_financial_question():
+    result = triage(
+        '{"language":"en","needs_member_data":false,'
+        '"likely_needs_human":false,"reasoning":"General financial education."}'
+    )
+
+    assert result.language == "en"
+    assert result.needs_member_data is False
+    assert result.likely_needs_human is False
 
 
-def test_intent_endpoint_uses_router_and_returns_schema():
+def test_member_specific_question():
+    result = triage(
+        '{"language":"sw","needs_member_data":true,'
+        '"likely_needs_human":false,"reasoning":"The member asks for loan data."}'
+    )
+
+    assert result.language == "sw"
+    assert result.needs_member_data is True
+    assert result.likely_needs_human is False
+
+
+def test_human_escalation_in_kiswahili():
+    result = triage(
+        '{"language":"sw","needs_member_data":true,'
+        '"likely_needs_human":true,"reasoning":"The member reports a transaction complaint."}'
+    )
+
+    assert result.language == "sw"
+    assert result.needs_member_data is True
+    assert result.likely_needs_human is True
+
+
+def test_english_complaint():
+    result = triage(
+        '{"language":"en","needs_member_data":true,'
+        '"likely_needs_human":true,"reasoning":"The member does not recognize a transaction."}'
+    )
+
+    assert result.language == "en"
+    assert result.needs_member_data is True
+    assert result.likely_needs_human is True
+
+
+def test_mixed_language():
+    result = triage(
+        '{"language":"mixed","needs_member_data":true,'
+        '"likely_needs_human":false,"reasoning":"The message mixes English and Kiswahili."}'
+    )
+
+    assert result.language == "mixed"
+
+
+def test_malformed_or_unsupported_output_returns_safe_fallback():
+    responses = [
+        "This is a member data request.",
+        '{"language":"fr","needs_member_data":false,'
+        '"likely_needs_human":false,"reasoning":"Unknown language."}',
+        '{"language":"en","needs_member_data":false}',
+    ]
+
+    for response in responses:
+        assert triage(response) == RequestTriageResult.fallback()
+
+
+def test_intent_endpoint_returns_triage_schema():
     client = TestClient(app)
-    mocked_result = IntentResult(
-        intent=Intent.GOAL_MANAGEMENT, confidence=0.95, language="en"
+    mocked_result = RequestTriageResult(
+        language="sw",
+        needs_member_data=True,
+        likely_needs_human=False,
+        reasoning="The member asks for their own loan information.",
     )
     original = ai_route._intent_router.classify
     ai_route._intent_router.classify = AsyncMock(return_value=mocked_result)
     try:
         response = client.post(
-            "/ai/intent", json={"message": "I want to save for university"}
+            "/ai/intent", json={"message": "Nataka kujua loan balance yangu."}
         )
     finally:
         ai_route._intent_router.classify = original
 
     assert response.status_code == 200
     assert response.json() == mocked_result.model_dump(mode="json")
+    assert "intent" not in response.json()
+    assert "confidence" not in response.json()
 
 
-def test_conversation_routes_intent_to_placeholder():
+def test_conversation_routes_human_support_first():
     router = AsyncMock()
-    router.classify.return_value = IntentResult(
-        intent=Intent.FINANCIAL_EDUCATION, confidence=0.9, language="en"
+    router.classify.return_value = RequestTriageResult(
+        language="en",
+        needs_member_data=True,
+        likely_needs_human=True,
+        reasoning="The member reports fraud.",
+    )
+    message = IncomingWhatsAppMessage(
+        from_number="+254700000000", body="I do not recognize a transaction."
+    )
+
+    response = asyncio.run(handle_message_async(message, router))
+
+    assert response == HUMAN_SUPPORT_PLACEHOLDER
+
+
+def test_conversation_routes_member_data_request():
+    router = AsyncMock()
+    router.classify.return_value = RequestTriageResult(
+        language="sw",
+        needs_member_data=True,
+        likely_needs_human=False,
+        reasoning="The member asks for a balance.",
+    )
+    message = IncomingWhatsAppMessage(
+        from_number="+254700000000", body="Nataka kujua loan balance yangu."
+    )
+
+    response = asyncio.run(handle_message_async(message, router))
+
+    assert response == MEMBER_DATA_PLACEHOLDER
+
+
+def test_conversation_routes_general_assistance():
+    router = AsyncMock()
+    router.classify.return_value = RequestTriageResult(
+        language="en",
+        needs_member_data=False,
+        likely_needs_human=False,
+        reasoning="The member asks a general question.",
     )
     message = IncomingWhatsAppMessage(
         from_number="+254700000000", body="What is compound interest?"
@@ -91,5 +178,4 @@ def test_conversation_routes_intent_to_placeholder():
 
     response = asyncio.run(handle_message_async(message, router))
 
-    router.classify.assert_awaited_once_with("What is compound interest?")
-    assert "coming later" in response
+    assert response == GENERAL_ASSISTANCE_PLACEHOLDER

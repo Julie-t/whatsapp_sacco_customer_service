@@ -1,7 +1,6 @@
 import logging
 
 from app.ai.intent_router import IntentRouter
-from app.schemas.intent import Intent, IntentResult
 from app.schemas.message import IncomingWhatsAppMessage
 
 logger = logging.getLogger(__name__)
@@ -25,12 +24,18 @@ MEDIA_NOT_SUPPORTED = (
     "I can't process media messages yet. Please type HELP to see how I can assist you."
 )
 
-FEATURE_NOT_AVAILABLE = {
-    Intent.FINANCIAL_EDUCATION: "Financial education features are coming later. Please type HELP to see what is available now.",
-    Intent.SACCO_INFORMATION: "SACCO information features are coming later. Please type HELP to see what is available now.",
-    Intent.GOAL_MANAGEMENT: "Goal management features are coming later. Please type HELP to see what is available now.",
-    Intent.HUMAN_SUPPORT: "Human support connection is coming later. Please type HELP to see what is available now.",
-}
+HUMAN_SUPPORT_PLACEHOLDER = (
+    "Your request may need staff assistance. Human support connection is coming later. "
+    "Please type HELP to see what is available now."
+)
+MEMBER_DATA_PLACEHOLDER = (
+    "Member account information features are coming later. Please type HELP to see "
+    "what is available now."
+)
+GENERAL_ASSISTANCE_PLACEHOLDER = (
+    "General assistance features are coming later. Please type HELP to see what is "
+    "available now."
+)
 
 GREETINGS = {"hello", "hi", "hey", "habari", "jambo", "sasa"}
 MENU_TRIGGERS = {"menu", "help"}
@@ -76,6 +81,8 @@ async def handle_message_async(
         return WELCOME_MESSAGE
 
     result = await (intent_router or IntentRouter()).classify(body)
-    if result.intent == Intent.GREETING:
-        return WELCOME_MESSAGE
-    return FEATURE_NOT_AVAILABLE.get(result.intent, FALLBACK_MESSAGE)
+    if result.likely_needs_human:
+        return HUMAN_SUPPORT_PLACEHOLDER
+    if result.needs_member_data:
+        return MEMBER_DATA_PLACEHOLDER
+    return GENERAL_ASSISTANCE_PLACEHOLDER

@@ -51,7 +51,7 @@ def test_menu_help_returns_welcome():
 def test_unknown_message_returns_fallback():
     response = _post_whatsapp("Something random")
     assert response.status_code == 200
-    assert "AI assistant capabilities are being introduced" in response.text
+    assert "may need staff assistance" in response.text
 
 
 def test_whitespace_normalization():
