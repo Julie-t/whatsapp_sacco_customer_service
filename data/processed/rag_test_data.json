@@ -1,0 +1,53 @@
+{
+  "description": "Synthetic test/demo data only. These documents are not official SACCO policies.",
+  "documents": [
+    {
+      "document_id": "test_compound_interest",
+      "title": "Test Demo: Compound Interest",
+      "content": "Compound interest is interest calculated on the original amount and on interest accumulated from earlier periods. This test explanation is synthetic and exists only to verify semantic retrieval.",
+      "source": "synthetic test data",
+      "content_type": "education",
+      "sacco_id": "demo_sacco",
+      "language": "en",
+      "topic": "compound_interest",
+      "audience": "test_users",
+      "metadata": {"is_test_data": true}
+    },
+    {
+      "document_id": "test_loan_repayment",
+      "title": "Test Demo: Loan Repayment",
+      "content": "Loan repayment means returning borrowed money through scheduled instalments. Each instalment may include part of the principal and applicable interest. This synthetic text is for retrieval tests only.",
+      "source": "synthetic test data",
+      "content_type": "education",
+      "sacco_id": "demo_sacco",
+      "language": "en",
+      "topic": "loan_repayment",
+      "audience": "test_users",
+      "metadata": {"is_test_data": true}
+    },
+    {
+      "document_id": "test_membership",
+      "title": "Test Demo: SACCO Membership",
+      "content": "SACCO membership describes joining a cooperative and participating as a member. This synthetic overview is not a membership policy and exists only for retrieval testing.",
+      "source": "synthetic test data",
+      "content_type": "education",
+      "sacco_id": "demo_sacco",
+      "language": "en",
+      "topic": "membership",
+      "audience": "test_users",
+      "metadata": {"is_test_data": true}
+    },
+    {
+      "document_id": "test_retirement_savings",
+      "title": "Test Demo: Retirement Savings",
+      "content": "Retirement savings are funds set aside over time to support future needs after employment. This synthetic explanation is not financial advice or an official SACCO document.",
+      "source": "synthetic test data",
+      "content_type": "education",
+      "sacco_id": "demo_sacco",
+      "language": "sw",
+      "topic": "retirement_savings",
+      "audience": "test_users",
+      "metadata": {"is_test_data": true}
+    }
+  ]
+}

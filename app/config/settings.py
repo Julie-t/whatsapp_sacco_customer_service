@@ -19,5 +19,36 @@ class Settings(BaseSettings):
 
     ngrok_authtoken: str = ""
 
+    # ------------------------------------------------------------------
+    # RAG / Retrieval infrastructure
+    # ------------------------------------------------------------------
+    # Qdrant connection. Leave QDRANT_URL empty to use an in-memory
+    # instance (used by tests and lightweight local development).
+    QDRANT_URL: str = ""
+    QDRANT_API_KEY: str = ""
+    QDRANT_COLLECTION: str = "sacco_knowledge"
+
+    # Embeddings. Use a sentence-transformers model that can run locally.
+    # The embedding implementation is provider-agnostic and is NOT tied to
+    # NVIDIA. Override EMBEDDING_MODEL to swap the model.
+    EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
+
+    # Retrieval defaults
+    RAG_TOP_K: int = 5
+    # Minimum similarity score prevents unrelated chunks from being presented
+    # as evidence when a collection has no relevant match.
+    RAG_MIN_SCORE: float = 0.2
+
+    # Deterministic chunking parameters (character based with overlap).
+    RAG_CHUNK_SIZE: int = 1000
+    RAG_CHUNK_OVERLAP: int = 200
+    # Minimum size for a trailing chunk before it is merged into the previous
+    # chunk. Avoids tiny fragments at the end of a document.
+    RAG_CHUNK_MIN_SIZE: int = 200
+
+    # Demo SACCO identifier used before real multi-tenant ingestion exists.
+    # Kept as configuration so the engine is never hardcoded to one SACCO.
+    DEFAULT_SACCO_ID: str = "demo_sacco"
+
 
 settings = Settings()

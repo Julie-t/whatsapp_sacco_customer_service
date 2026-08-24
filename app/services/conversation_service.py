@@ -33,8 +33,8 @@ MEMBER_DATA_PLACEHOLDER = (
     "what is available now."
 )
 GENERAL_ASSISTANCE_PLACEHOLDER = (
-    "General assistance features are coming later. Please type HELP to see what is "
-    "available now."
+    "Your request may need staff assistance. General assistance features are coming "
+    "later. Please type HELP to see what is available now."
 )
 
 GREETINGS = {"hello", "hi", "hey", "habari", "jambo", "sasa"}
