@@ -7,10 +7,11 @@ class Settings(BaseSettings):
     app_env: str = "development"
 
     database_url: str = "postgresql://user:pass@localhost:5432/sacco"
+    conversation_retention_days: int = 90
 
-    NVIDIA_API_KEY: str = ""
-    NVIDIA_BASE_URL: str = "https://integrate.api.nvidia.com/v1"
-    NVIDIA_MODEL: str = "meta/llama-3-3-70b-instruct"
+    GROQ_API_KEY: str = ""
+    GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
+    GROQ_MODEL: str = "openai/gpt-oss-120b"
 
     twilio_account_sid: str = ""
     twilio_auth_token: str = ""
@@ -38,6 +39,8 @@ class Settings(BaseSettings):
     # Minimum similarity score prevents unrelated chunks from being presented
     # as evidence when a collection has no relevant match.
     RAG_MIN_SCORE: float = 0.2
+    RAG_ANSWER_MAX_TOKENS: int = 500
+    RAG_ANSWER_TEMPERATURE: float = 0.2
 
     # Deterministic chunking parameters (character based with overlap).
     RAG_CHUNK_SIZE: int = 1000

@@ -1,0 +1,461 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "description": "RAG Evaluation Dataset for SACCO Customer Service",
+    "sacco_id": "demo_sacco",
+    "total_cases": 45,
+    "language": "en"
+  },
+  "cases": [
+    {
+      "id": "eval_001",
+      "question": "What is compound interest?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "answer",
+      "expected_source": "compound_interest",
+      "expected_fallback": null,
+      "notes": "Self-contained, should retrieve compound interest doc"
+    },
+    {
+      "id": "eval_002",
+      "question": "How much can I get?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "clarification",
+      "expected_source": null,
+      "expected_fallback": "clarification",
+      "notes": "Ambiguous follow-up without context"
+    },
+    {
+      "id": "eval_003",
+      "question": "What is a development loan?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "answer",
+      "expected_source": "loan_types",
+      "expected_fallback": null,
+      "notes": "Clear question about SACCO products"
+    },
+    {
+      "id": "eval_004",
+      "question": "What documents do I need for a loan?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "answer",
+      "expected_source": "loan_requirements",
+      "expected_fallback": null,
+      "notes": "Specific question about requirements"
+    },
+    {
+      "id": "eval_005",
+      "question": "How are dividends calculated?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "answer",
+      "expected_source": "dividends",
+      "expected_fallback": null,
+      "notes": "Financial education question"
+    },
+    {
+      "id": "eval_006",
+      "question": "Can I increase my monthly contribution?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "knowledge_gap",
+      "expected_source": null,
+      "expected_fallback": "knowledge_gap",
+      "notes": "Likely not in KB, real operations question"
+    },
+    {
+      "id": "eval_007",
+      "question": "What is the current USD/KES exchange rate?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "knowledge_gap",
+      "expected_source": null,
+      "expected_fallback": "knowledge_gap",
+      "notes": "Real-time data not in knowledge base"
+    },
+    {
+      "id": "eval_008",
+      "question": "I don't recognize a transaction. It looks like fraud.",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "human_escalation",
+      "expected_source": null,
+      "expected_fallback": "human_escalation",
+      "notes": "Fraud allegation requires staff"
+    },
+    {
+      "id": "eval_009",
+      "question": "I want to make a withdrawal immediately.",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "human_escalation",
+      "expected_source": null,
+      "expected_fallback": "human_escalation",
+      "notes": "Account action requires staff"
+    },
+    {
+      "id": "eval_010",
+      "question": "What is your investment recommendation for me?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "guardrail",
+      "expected_source": null,
+      "expected_fallback": "guardrail",
+      "notes": "Directive investment advice is out of scope"
+    },
+    {
+      "id": "eval_011",
+      "question": "Should I put all my money in the stock market?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "guardrail",
+      "expected_source": null,
+      "expected_fallback": "guardrail",
+      "notes": "Directive advice - guardrail"
+    },
+    {
+      "id": "eval_012",
+      "question": "How do I apply for membership?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "answer",
+      "expected_source": "membership",
+      "expected_fallback": null,
+      "notes": "Basic membership question"
+    },
+    {
+      "id": "eval_013",
+      "question": "What is the difference between shares and savings?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "answer",
+      "expected_source": "shares_savings",
+      "expected_fallback": null,
+      "notes": "Financial education - product comparison"
+    },
+    {
+      "id": "eval_014",
+      "question": "What happens to my money if the SACCO fails?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "answer",
+      "expected_source": "insurance_protection",
+      "expected_fallback": null,
+      "notes": "Trust/insurance question"
+    },
+    {
+      "id": "eval_015",
+      "question": "How do I calculate my loan repayment?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "answer",
+      "expected_source": "loan_repayment",
+      "expected_fallback": null,
+      "notes": "Educational, not account-specific"
+    },
+    {
+      "id": "eval_016",
+      "question": "Explain the result",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "clarification",
+      "expected_source": null,
+      "expected_fallback": "clarification",
+      "notes": "Vague pronoun reference - needs clarification"
+    },
+    {
+      "id": "eval_017",
+      "question": "Tell me about loans",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "clarification",
+      "expected_source": null,
+      "expected_fallback": "clarification",
+      "notes": "Too broad, needs clarification"
+    },
+    {
+      "id": "eval_018",
+      "question": "What is interest?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "answer",
+      "expected_source": "interest_basics",
+      "expected_fallback": null,
+      "notes": "Basic financial concept"
+    },
+    {
+      "id": "eval_019",
+      "question": "Uanachama wa SACCO unaeleza nini?",
+      "language": "sw",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "answer",
+      "expected_source": "membership_sw",
+      "expected_fallback": null,
+      "notes": "Swahili: What is SACCO membership?"
+    },
+    {
+      "id": "eval_020",
+      "question": "Riba ya jumla ni nini?",
+      "language": "sw",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "answer",
+      "expected_source": "compound_interest_sw",
+      "expected_fallback": null,
+      "notes": "Swahili: What is compound interest?"
+    },
+    {
+      "id": "eval_021",
+      "question": "What is the minimum balance?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "knowledge_gap",
+      "expected_source": null,
+      "expected_fallback": "knowledge_gap",
+      "notes": "Specific policy not in demo KB"
+    },
+    {
+      "id": "eval_022",
+      "question": "Can I change my guarantor?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "knowledge_gap",
+      "expected_source": null,
+      "expected_fallback": "knowledge_gap",
+      "notes": "Account operations not in KB"
+    },
+    {
+      "id": "eval_023",
+      "question": "What is the processing fee for a loan?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "knowledge_gap",
+      "expected_source": null,
+      "expected_fallback": "knowledge_gap",
+      "notes": "Specific fee not in demo KB"
+    },
+    {
+      "id": "eval_024",
+      "question": "How long does loan approval take?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "knowledge_gap",
+      "expected_source": null,
+      "expected_fallback": "knowledge_gap",
+      "notes": "Specific timeline not in KB"
+    },
+    {
+      "id": "eval_025",
+      "question": "I want to complain about your service",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "human_escalation",
+      "expected_source": null,
+      "expected_fallback": "human_escalation",
+      "notes": "Complaint requires human handling"
+    },
+    {
+      "id": "eval_026",
+      "question": "I lost my PIN",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "human_escalation",
+      "expected_source": null,
+      "expected_fallback": "human_escalation",
+      "notes": "Security issue requires staff"
+    },
+    {
+      "id": "eval_027",
+      "question": "I want to speak to someone",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "human_escalation",
+      "expected_source": null,
+      "expected_fallback": "human_escalation",
+      "notes": "Explicit human request"
+    },
+    {
+      "id": "eval_028",
+      "question": "What percentage of my money should go to emergency savings?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "guardrail",
+      "expected_source": null,
+      "expected_fallback": "guardrail",
+      "notes": "Directive personal financial advice"
+    },
+    {
+      "id": "eval_029",
+      "question": "Is the SACCO registered?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "answer",
+      "expected_source": "sacco_registration",
+      "expected_fallback": null,
+      "notes": "Regulatory/trust question"
+    },
+    {
+      "id": "eval_030",
+      "question": "What languages do you support?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "clarification",
+      "expected_source": null,
+      "expected_fallback": "clarification",
+      "notes": "Meta question about system, not SACCO knowledge"
+    },
+    {
+      "id": "eval_031",
+      "question": "How much interest will I earn on my savings?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "answer",
+      "expected_source": "interest_rates",
+      "expected_fallback": null,
+      "notes": "Educational, general rates vs. account-specific"
+    },
+    {
+      "id": "eval_032",
+      "question": "What is the loan approval process?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "answer",
+      "expected_source": "loan_process",
+      "expected_fallback": null,
+      "notes": "General process information"
+    },
+    {
+      "id": "eval_033",
+      "question": "Can I get a loan while working abroad?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "knowledge_gap",
+      "expected_source": null,
+      "expected_fallback": "knowledge_gap",
+      "notes": "Specific eligibility question not in KB"
+    },
+    {
+      "id": "eval_034",
+      "question": "Help!",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "clarification",
+      "expected_source": null,
+      "expected_fallback": "clarification",
+      "notes": "Extremely vague - needs clarification"
+    },
+    {
+      "id": "eval_035",
+      "question": "What should I do?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "clarification",
+      "expected_source": null,
+      "expected_fallback": "clarification",
+      "notes": "Completely ambiguous - needs context"
+    },
+    {
+      "id": "eval_036",
+      "question": "How do SACCOs generate income?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "answer",
+      "expected_source": "sacco_operations",
+      "expected_fallback": null,
+      "notes": "Educational about SACCO model"
+    },
+    {
+      "id": "eval_037",
+      "question": "What is a SACCO?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "answer",
+      "expected_source": "sacco_definition",
+      "expected_fallback": null,
+      "notes": "Basic definition"
+    },
+    {
+      "id": "eval_038",
+      "question": "I want to make an investment in crypto",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "guardrail",
+      "expected_source": null,
+      "expected_fallback": "guardrail",
+      "notes": "High-risk directive advice - guardrail"
+    },
+    {
+      "id": "eval_039",
+      "question": "How do I withdraw funds?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "answer",
+      "expected_source": "withdrawal_process",
+      "expected_fallback": null,
+      "notes": "General process information"
+    },
+    {
+      "id": "eval_040",
+      "question": "What happens if I miss a loan payment?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "answer",
+      "expected_source": "loan_defaults",
+      "expected_fallback": null,
+      "notes": "Important policy information"
+    },
+    {
+      "id": "eval_041",
+      "question": "Can I defer my loan payments?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "knowledge_gap",
+      "expected_source": null,
+      "expected_fallback": "knowledge_gap",
+      "notes": "Specific operations question"
+    },
+    {
+      "id": "eval_042",
+      "question": "What is the maximum loan amount?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "knowledge_gap",
+      "expected_source": null,
+      "expected_fallback": "knowledge_gap",
+      "notes": "Specific policy - likely not in demo KB"
+    },
+    {
+      "id": "eval_043",
+      "question": "How do I check my balance?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "human_escalation",
+      "expected_source": null,
+      "expected_fallback": "human_escalation",
+      "notes": "Account-specific action"
+    },
+    {
+      "id": "eval_044",
+      "question": "Unataka kusaidia? Nini?",
+      "language": "sw",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "clarification",
+      "expected_source": null,
+      "expected_fallback": "clarification",
+      "notes": "Swahili: Do you want to help? What?"
+    },
+    {
+      "id": "eval_045",
+      "question": "What are your business hours?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "knowledge_gap",
+      "expected_source": null,
+      "expected_fallback": "knowledge_gap",
+      "notes": "Operational info not in knowledge base"
+    }
+  ]
+}

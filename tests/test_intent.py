@@ -53,6 +53,26 @@ def test_general_financial_question():
     assert result.likely_needs_human is False
 
 
+def test_loan_requirements_are_general_assistance():
+    result = triage(
+        '{"language":"en","needs_member_data":false,'
+        '"likely_needs_human":false,"reasoning":"General SACCO loan information."}'
+    )
+
+    assert result.needs_member_data is False
+    assert result.likely_needs_human is False
+
+
+def test_router_accepts_json_code_fence():
+    result = triage(
+        '```json\n{"language":"en","needs_member_data":false,'
+        '"likely_needs_human":false,"reasoning":"General education."}\n```'
+    )
+
+    assert result.language == "en"
+    assert result.likely_needs_human is False
+
+
 def test_member_specific_question():
     result = triage(
         '{"language":"sw","needs_member_data":true,'

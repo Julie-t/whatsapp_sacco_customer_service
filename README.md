@@ -18,6 +18,28 @@ The default embedding model runs locally after it has been downloaded once.
 python -m pip install -r requirements.txt
 docker compose -f docker_compose.yml up -d qdrant
 python scripts/ingest_documents.py
+python scripts/migrate.py
+```
+
+## Operations
+
+Conversation history uses PostgreSQL in normal runtime and is retained for 90
+days by default. Set `CONVERSATION_RETENTION_DAYS` to change this and run:
+
+```bash
+python scripts/cleanup_conversations.py
+python scripts/report_knowledge_gaps.py --sacco-id demo_sacco
+```
+
+Apply migrations explicitly; the application does not mutate database schema
+during startup. `/health` is a liveness check, while `/readiness` checks
+PostgreSQL availability. Provider errors use HTTP 503 with the non-sensitive
+`provider_failure` error code.
+
+Run the offline RAG evaluation with:
+
+```bash
+python scripts/evaluate_rag.py
 ```
 
 The ingestion script uses only `data/processed/rag_test_data.json`, which is
@@ -39,8 +61,8 @@ app/
   api/routes/whatsapp.py         # WhatsApp webhook
   services/whatsapp_service.py   # Twilio service abstraction
   ai/
-    llm.py                       # LLM abstraction
-    providers/nvidia.py          # NVIDIA provider
+    nvidia.py                    # LLM abstraction (Groq-backed)
+    providers/groq.py            # Groq provider
   database/connection.py         # PostgreSQL connection
 ```
 

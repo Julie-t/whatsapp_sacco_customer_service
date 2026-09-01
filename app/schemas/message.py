@@ -1,6 +1,13 @@
 from pydantic import BaseModel, Field
 
 
+class ConversationTurn(BaseModel):
+    """A single turn in a conversation (user or assistant message)."""
+
+    role: str  # "user" or "assistant"
+    content: str
+
+
 class IncomingWhatsAppMessage(BaseModel):
     message_id: str | None = None
     from_number: str

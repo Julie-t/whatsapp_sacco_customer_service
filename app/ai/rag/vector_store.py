@@ -191,13 +191,13 @@ class QdrantVectorStore:
         filters: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
         query_filter = _build_filter(filters)
-        hits = self.client.search(
+        hits = self.client.query_points(
             collection_name=self.collection_name,
-            query_vector=query_vector,
+            query=query_vector,
             query_filter=query_filter,
             limit=top_k,
             with_payload=True,
-        )
+        ).points
         results = []
         for hit in hits:
             payload = hit.payload or {}
@@ -214,13 +214,21 @@ class QdrantVectorStore:
                     "topic": payload.get("topic", ""),
                     "content_type": payload.get("content_type", ""),
                     "metadata": {
-                        k: payload.get(k)
-                        for k in (
-                            "audience",
-                            "goals",
-                            "effective_date",
-                        )
-                        if k in payload
+                        k: value
+                        for k, value in payload.items()
+                        if k
+                        not in {
+                            "document_id",
+                            "chunk_id",
+                            "chunk_index",
+                            "title",
+                            "content",
+                            "source",
+                            "content_type",
+                            "sacco_id",
+                            "language",
+                            "topic",
+                        }
                     },
                 }
             )

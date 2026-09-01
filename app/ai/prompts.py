@@ -76,5 +76,10 @@ Given the member's message, output JSON only:
 - likely_needs_human: true for disputes, complaints, fraud, account changes, or
     anything you can't confidently place in a financial-education/product-info/goal-
     planning category.
+- General questions about SACCO products, loan requirements, membership, savings,
+    or financial education must use needs_member_data=false and
+    likely_needs_human=false.
+- "What are the requirements for a development loan?" is general SACCO information,
+    not a complaint and not a member-data request.
 Do not classify into a fixed topic list. Do not answer the member's question here.
 """.strip()

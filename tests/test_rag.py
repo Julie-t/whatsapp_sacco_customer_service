@@ -53,7 +53,7 @@ def make_documents() -> list[RAGDocument]:
 
 def make_pipeline() -> RAGPipeline:
     provider = MockEmbeddingProvider(dimension=128)
-    store = QdrantVectorStore(collection_name="test_rag_collection")
+    store = QdrantVectorStore(collection_name="test_rag_collection", url="")
     ingestor = DocumentIngestor(provider, store)
     ingestor.ingest_documents(make_documents())
     return RAGPipeline(retriever=Retriever(provider, store, min_score=0.2))
@@ -87,7 +87,7 @@ def test_embeddings_have_consistent_dimension_and_batch_support():
 
 def test_vector_store_insert_and_search():
     provider = MockEmbeddingProvider(dimension=64)
-    store = QdrantVectorStore(collection_name="test_vector_store")
+    store = QdrantVectorStore(collection_name="test_vector_store", url="")
     ingestor = DocumentIngestor(provider, store)
     ingestor.ingest_documents(make_documents()[:2])
 

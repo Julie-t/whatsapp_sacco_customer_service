@@ -1,11 +1,26 @@
 import json
 import logging
+import re
 
 from app.ai.nvidia import LLM
 from app.ai.prompts import ROUTER_PROMPT
 from app.schemas.intent import RequestTriageResult
 
 logger = logging.getLogger(__name__)
+
+
+def _parse_triage_response(raw_response: str) -> RequestTriageResult:
+    cleaned = raw_response.strip()
+    if cleaned.startswith("```"):
+        cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", cleaned, flags=re.IGNORECASE)
+    try:
+        payload = json.loads(cleaned)
+    except json.JSONDecodeError:
+        match = re.search(r"\{.*\}", cleaned, flags=re.DOTALL)
+        if not match:
+            raise
+        payload = json.loads(match.group(0))
+    return RequestTriageResult.model_validate(payload)
 
 
 class IntentRouter:
@@ -20,7 +35,7 @@ class IntentRouter:
                     {"role": "user", "content": message},
                 ]
             )
-            return RequestTriageResult.model_validate(json.loads(raw_response))
+            return _parse_triage_response(raw_response)
         except (json.JSONDecodeError, TypeError, ValueError, RuntimeError) as exc:
             logger.warning("Request triage failed safely: %s", exc)
             return RequestTriageResult.fallback()

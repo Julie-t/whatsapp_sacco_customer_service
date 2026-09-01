@@ -7,16 +7,16 @@ from app.config.settings import settings
 logger = logging.getLogger(__name__)
 
 
-class NVIDIAProvider:
+class GroqProvider:
     def __init__(self):
-        self.api_key = settings.NVIDIA_API_KEY
-        self.base_url = settings.NVIDIA_BASE_URL.rstrip("/")
-        self.model = settings.NVIDIA_MODEL
+        self.api_key = settings.GROQ_API_KEY
+        self.base_url = settings.GROQ_BASE_URL.rstrip("/")
+        self.model = settings.GROQ_MODEL
 
     async def generate(self, messages: list[dict]) -> str:
-        api_key = settings.NVIDIA_API_KEY
+        api_key = settings.GROQ_API_KEY
         if not api_key:
-            raise RuntimeError("NVIDIA_API_KEY is not configured")
+            raise RuntimeError("GROQ_API_KEY is not configured")
 
         url = f"{self.base_url}/chat/completions"
         headers = {
@@ -33,7 +33,7 @@ class NVIDIAProvider:
                 response = await client.post(url, json=payload, headers=headers)
                 if response.status_code != 200:
                     logger.error(
-                        "NVIDIA API error: status=%s url=%s body=%s",
+                        "Groq API error: status=%s url=%s body=%s",
                         response.status_code,
                         url,
                         response.text[:500],
@@ -44,15 +44,15 @@ class NVIDIAProvider:
         except httpx.HTTPStatusError as exc:
             status = exc.response.status_code
             if status == 401:
-                raise RuntimeError("NVIDIA authentication failed") from exc
+                raise RuntimeError("Groq authentication failed") from exc
             if status == 429:
-                raise RuntimeError("NVIDIA rate limit exceeded") from exc
+                raise RuntimeError("Groq rate limit exceeded") from exc
             if status == 404:
-                raise RuntimeError(f"NVIDIA model not found: {self.model}") from exc
-            raise RuntimeError(f"NVIDIA API error: {status}") from exc
+                raise RuntimeError(f"Groq model not found: {self.model}") from exc
+            raise RuntimeError(f"Groq API error: {status}") from exc
         except httpx.TimeoutException as exc:
-            raise RuntimeError("NVIDIA request timed out") from exc
+            raise RuntimeError("Groq request timed out") from exc
         except httpx.RequestError as exc:
-            raise RuntimeError("NVIDIA network error") from exc
+            raise RuntimeError("Groq network error") from exc
         except (KeyError, IndexError, TypeError) as exc:
-            raise RuntimeError("Unexpected NVIDIA response format") from exc
+            raise RuntimeError("Unexpected Groq response format") from exc
