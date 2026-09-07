@@ -9,6 +9,7 @@ from app.api.routes import ai as ai_route
 from app.main import app
 from app.schemas.intent import RequestTriageResult
 from app.schemas.message import IncomingWhatsAppMessage
+from app.schemas.rag_answer import RAGAnswerResponse
 from app.services.conversation_service import (
     GENERAL_ASSISTANCE_PLACEHOLDER,
     HUMAN_SUPPORT_PLACEHOLDER,
@@ -25,6 +26,16 @@ class FakeLLM:
     async def generate(self, messages):
         self.messages = messages
         return self.response
+
+
+class FakeAnswerService:
+    async def answer(self, **kwargs):
+        return RAGAnswerResponse(
+            query=kwargs["query"],
+            answer="Compound interest is interest calculated on the original amount and accumulated interest.",
+            sources=[],
+            grounded=True,
+        )
 
 
 def triage(response: str) -> RequestTriageResult:
@@ -196,6 +207,8 @@ def test_conversation_routes_general_assistance():
         from_number="+254700000000", body="What is compound interest?"
     )
 
-    response = asyncio.run(handle_message_async(message, router))
+    response = asyncio.run(
+        handle_message_async(message, router, rag_answer_service=FakeAnswerService())
+    )
 
-    assert response == GENERAL_ASSISTANCE_PLACEHOLDER
+    assert "Compound interest" in response or "interest" in response.lower()

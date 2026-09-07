@@ -12,12 +12,15 @@ import logging
 from time import perf_counter
 from typing import Optional
 
-from app.ai.nvidia import LLM
+from app.ai.llm import LLM
+from app.ai.providers.groq import GroqRateLimitError
 from app.ai.rag.answerability import AnswerabilityChecker
 from app.ai.rag.context import build_context
+from app.ai.rag.models import RAGResult
 from app.ai.rag.pipeline import RAGPipeline
 from app.ai.rag.prompts import grounded_answer_messages
 from app.ai.rag.query_rewriter import QueryRewriter
+from app.config.settings import settings
 from app.core.fallback import FallbackCategory, FallbackHandler, FallbackResponse
 from app.core.metrics import record_provider_failure
 from app.schemas.message import ConversationTurn
@@ -55,7 +58,9 @@ class RAGAnswerService:
         self.pipeline = pipeline
         self.llm = llm
         self.query_rewriter = query_rewriter or QueryRewriter(llm)
-        self.answerability_checker = answerability_checker or AnswerabilityChecker()
+        self.answerability_checker = answerability_checker or AnswerabilityChecker(
+            min_retrieval_score=settings.RAG_MIN_SCORE
+        )
         self.knowledge_gap_service = knowledge_gap_service or KnowledgeGapService()
 
     async def answer(
@@ -67,6 +72,7 @@ class RAGAnswerService:
         topic: str | None = None,
         top_k: int | None = None,
         conversation_history: list[dict] | None = None,
+        retrieved_results: list[RAGResult] | None = None,
     ) -> RAGAnswerResponse:
         """Generate a grounded answer to a query.
 
@@ -110,7 +116,7 @@ class RAGAnswerService:
 
         # Step 2: Retrieval
         retrieval_started = perf_counter()
-        results = self.pipeline.search(
+        results = retrieved_results if retrieved_results is not None else self.pipeline.search(
             query=reformulated_query,
             sacco_id=sacco_id,
             language=language,
@@ -153,6 +159,7 @@ class RAGAnswerService:
 
             return RAGAnswerResponse(
                 query=query,
+                reformulated_query=reformulated_query,
                 answer=NO_CONTEXT_ANSWER,
                 sources=[],
                 grounded=False,
@@ -186,6 +193,7 @@ class RAGAnswerService:
 
             return RAGAnswerResponse(
                 query=query,
+                reformulated_query=reformulated_query,
                 answer=fallback.user_message,
                 sources=[],
                 grounded=False,
@@ -202,13 +210,14 @@ class RAGAnswerService:
             answer = await self.llm.generate(grounded_answer_messages(query, context))
         except Exception as exc:
             logger.error("LLM generation failed: %s", exc)
-            record_provider_failure("NVIDIA LLM", "generate", type(exc).__name__)
+            record_provider_failure("Groq LLM", "generate", type(exc).__name__)
             fallback = FallbackHandler.provider_failure(
-                service_name="NVIDIA LLM",
+                service_name="Groq LLM",
                 error=str(exc),
             )
             return RAGAnswerResponse(
                 query=query,
+                reformulated_query=reformulated_query,
                 answer=fallback.user_message,
                 sources=[],
                 grounded=False,
@@ -240,6 +249,7 @@ class RAGAnswerService:
 
         return RAGAnswerResponse(
             query=query,
+            reformulated_query=reformulated_query,
             answer=answer,
             sources=sources,
             grounded=True,

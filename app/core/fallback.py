@@ -8,7 +8,7 @@ Categories:
 - knowledge_gap: Question is clear but knowledge base lacks evidence
 - guardrail: Request is outside what the assistant should answer
 - human_escalation: Request requires human staff intervention
-- provider_failure: External service (NVIDIA, etc) failed
+- provider_failure: External LLM or backend service failed
 """
 
 import logging
@@ -217,11 +217,11 @@ class FallbackHandler:
     ) -> FallbackResponse:
         """Generate a provider failure response.
 
-        Used when NVIDIA or another required service fails.
+        Used when the configured LLM or another required service fails.
         Does not expose technical details to the member.
 
         Args:
-            service_name: Name of the service that failed (e.g., "NVIDIA LLM").
+            service_name: Name of the service that failed (e.g., "Groq LLM").
             error: Optional technical error details (for logging, not user-facing).
             metadata: Optional metadata to include.
 

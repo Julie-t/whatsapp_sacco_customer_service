@@ -3,8 +3,8 @@ import re
 from time import perf_counter
 
 from app.ai.intent_router import IntentRouter
+from app.ai.llm import LLM
 from app.ai.rag.pipeline import RAGPipeline
-from app.ai.nvidia import LLM
 from app.schemas.message import IncomingWhatsAppMessage
 from app.services.rag_answer_service import NO_CONTEXT_ANSWER, RAGAnswerService
 from app.services.conversation_history import InMemoryConversationHistory

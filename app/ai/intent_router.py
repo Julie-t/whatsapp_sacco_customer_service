@@ -2,7 +2,7 @@ import json
 import logging
 import re
 
-from app.ai.nvidia import LLM
+from app.ai.llm import LLM
 from app.ai.prompts import ROUTER_PROMPT
 from app.schemas.intent import RequestTriageResult
 

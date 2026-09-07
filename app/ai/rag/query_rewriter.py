@@ -15,7 +15,7 @@ This module converts "How much can I get?" into something like
 import logging
 from typing import Optional
 
-from app.ai.nvidia import LLM
+from app.ai.llm import LLM
 from app.schemas.message import ConversationTurn
 
 logger = logging.getLogger(__name__)

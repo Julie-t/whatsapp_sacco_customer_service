@@ -1,10 +1,17 @@
 {
   "metadata": {
-    "version": "1.0",
-    "description": "RAG Evaluation Dataset for SACCO Customer Service",
+    "version": "2.0",
+    "description": "Enhanced RAG Evaluation Dataset for SACCO Customer Service - System 6 Final Evaluation",
     "sacco_id": "demo_sacco",
-    "total_cases": 45,
-    "language": "en"
+    "total_cases": 56,
+    "language_mix": "en, sw, mixed",
+    "case_distribution": {
+      "answerable": 26,
+      "knowledge_gap": 10,
+      "clarification": 7,
+      "human_escalation": 8,
+      "guardrail": 5
+    }
   },
   "cases": [
     {
@@ -13,9 +20,14 @@
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "compound_interest",
+      "expected_source": "test_compound_interest",
       "expected_fallback": null,
-      "notes": "Self-contained, should retrieve compound interest doc"
+      "expected_claims": [
+        "Compound interest is interest earned on both principal and accumulated interest from previous periods.",
+        "Compound interest grows exponentially over time.",
+        "The formula for compound interest accounts for the interest rate, principal amount, and time period."
+      ],
+      "notes": "Self-contained financial education question"
     },
     {
       "id": "eval_002",
@@ -25,7 +37,8 @@
       "expected_behavior": "clarification",
       "expected_source": null,
       "expected_fallback": "clarification",
-      "notes": "Ambiguous follow-up without context"
+      "expected_claims": [],
+      "notes": "Ambiguous follow-up without context - requires clarification"
     },
     {
       "id": "eval_003",
@@ -33,9 +46,14 @@
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "loan_types",
+      "expected_source": "test_loan_types",
       "expected_fallback": null,
-      "notes": "Clear question about SACCO products"
+      "expected_claims": [
+        "A development loan is used for projects that generate income.",
+        "Development loans support business expansion or infrastructure improvements.",
+        "Members must demonstrate a viable business plan to qualify for a development loan."
+      ],
+      "notes": "Clear product-specific question"
     },
     {
       "id": "eval_004",
@@ -43,9 +61,15 @@
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "loan_requirements",
+      "expected_source": "test_loan_documents",
       "expected_fallback": null,
-      "notes": "Specific question about requirements"
+      "expected_claims": [
+        "An identification document is required for loan applications.",
+        "Proof of income or employment is required.",
+        "A completed loan application form is required.",
+        "Two guarantors must be provided."
+      ],
+      "notes": "Specific requirements question"
     },
     {
       "id": "eval_005",
@@ -53,9 +77,14 @@
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "dividends",
+      "expected_source": "test_dividends_interest",
       "expected_fallback": null,
-      "notes": "Financial education question"
+      "expected_claims": [
+        "Dividends are calculated based on the member's share capital contribution.",
+        "The SACCO distributes dividends annually from surplus earnings.",
+        "Dividend rates depend on the SACCO's financial performance."
+      ],
+      "notes": "Financial calculation question"
     },
     {
       "id": "eval_006",
@@ -65,7 +94,8 @@
       "expected_behavior": "knowledge_gap",
       "expected_source": null,
       "expected_fallback": "knowledge_gap",
-      "notes": "Likely not in KB, real operations question"
+      "expected_claims": [],
+      "notes": "Account operations not explicitly covered in demo knowledge base"
     },
     {
       "id": "eval_007",
@@ -75,7 +105,8 @@
       "expected_behavior": "knowledge_gap",
       "expected_source": null,
       "expected_fallback": "knowledge_gap",
-      "notes": "Real-time data not in knowledge base"
+      "expected_claims": [],
+      "notes": "Real-time data not in static knowledge base"
     },
     {
       "id": "eval_008",
@@ -85,7 +116,8 @@
       "expected_behavior": "human_escalation",
       "expected_source": null,
       "expected_fallback": "human_escalation",
-      "notes": "Fraud allegation requires staff"
+      "expected_claims": [],
+      "notes": "Security issue requires human agent"
     },
     {
       "id": "eval_009",
@@ -95,7 +127,8 @@
       "expected_behavior": "human_escalation",
       "expected_source": null,
       "expected_fallback": "human_escalation",
-      "notes": "Account action requires staff"
+      "expected_claims": [],
+      "notes": "Account transaction requires staff authentication"
     },
     {
       "id": "eval_010",
@@ -105,6 +138,7 @@
       "expected_behavior": "guardrail",
       "expected_source": null,
       "expected_fallback": "guardrail",
+      "expected_claims": [],
       "notes": "Directive investment advice is out of scope"
     },
     {
@@ -115,7 +149,8 @@
       "expected_behavior": "guardrail",
       "expected_source": null,
       "expected_fallback": "guardrail",
-      "notes": "Directive advice - guardrail"
+      "expected_claims": [],
+      "notes": "Directive advice guardrail"
     },
     {
       "id": "eval_012",
@@ -123,9 +158,15 @@
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "membership",
+      "expected_source": "test_membership",
       "expected_fallback": null,
-      "notes": "Basic membership question"
+      "expected_claims": [
+        "Membership applications are submitted through SACCO offices.",
+        "Prospective members must meet eligibility criteria.",
+        "A registration fee is required to complete membership.",
+        "Members must hold at least one share unit."
+      ],
+      "notes": "Membership process question"
     },
     {
       "id": "eval_013",
@@ -133,9 +174,15 @@
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "shares_savings",
+      "expected_source": "test_shares_vs_deposits",
       "expected_fallback": null,
-      "notes": "Financial education - product comparison"
+      "expected_claims": [
+        "Shares represent ownership in the SACCO.",
+        "Savings are funds held for the member's benefit and earning interest.",
+        "Shareholders receive dividends from profits.",
+        "Savings account balances earn interest based on the rate set by the SACCO."
+      ],
+      "notes": "Product comparison education"
     },
     {
       "id": "eval_014",
@@ -143,9 +190,14 @@
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "insurance_protection",
+      "expected_source": "test_deposit_missing",
       "expected_fallback": null,
-      "notes": "Trust/insurance question"
+      "expected_claims": [
+        "Member deposits are protected under SACCO regulations.",
+        "The SACCO maintains insurance for member protection.",
+        "Regulatory oversight ensures financial security."
+      ],
+      "notes": "Trust and insurance assurance"
     },
     {
       "id": "eval_015",
@@ -153,9 +205,14 @@
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "loan_repayment",
+      "expected_source": "test_loan_repayment",
       "expected_fallback": null,
-      "notes": "Educational, not account-specific"
+      "expected_claims": [
+        "Loan repayment is calculated using the principal amount, interest rate, and loan term.",
+        "Monthly payments are fixed for the duration of the loan.",
+        "The repayment schedule is provided when the loan is disbursed."
+      ],
+      "notes": "Educational repayment calculation"
     },
     {
       "id": "eval_016",
@@ -165,7 +222,8 @@
       "expected_behavior": "clarification",
       "expected_source": null,
       "expected_fallback": "clarification",
-      "notes": "Vague pronoun reference - needs clarification"
+      "expected_claims": [],
+      "notes": "Vague pronoun - needs context"
     },
     {
       "id": "eval_017",
@@ -175,7 +233,8 @@
       "expected_behavior": "clarification",
       "expected_source": null,
       "expected_fallback": "clarification",
-      "notes": "Too broad, needs clarification"
+      "expected_claims": [],
+      "notes": "Too broad - needs specificity"
     },
     {
       "id": "eval_018",
@@ -183,9 +242,15 @@
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "interest_basics",
+      "expected_source": "test_compound_interest",
       "expected_fallback": null,
-      "notes": "Basic financial concept"
+      "expected_claims": [
+        "Interest is the cost of borrowing money.",
+        "Interest is expressed as a percentage of the principal amount.",
+        "Interest accrues over the loan period.",
+        "Simple interest and compound interest are two types of interest calculations."
+      ],
+      "notes": "Foundational financial concept"
     },
     {
       "id": "eval_019",
@@ -193,9 +258,14 @@
       "language": "sw",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "membership_sw",
+      "expected_source": "test_membership",
       "expected_fallback": null,
-      "notes": "Swahili: What is SACCO membership?"
+      "expected_claims": [
+        "Uanachama wa SACCO ni kuwa mwanachama rasmi wa kundi la akiba na mkopo.",
+        "Wanachama wanakuwa waimiliki wa SACCO.",
+        "Wanachama wanapokea mgawanyiko wa faida za SACCO."
+      ],
+      "notes": "Swahili: SACCO membership definition"
     },
     {
       "id": "eval_020",
@@ -203,29 +273,36 @@
       "language": "sw",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "compound_interest_sw",
+      "expected_source": "test_compound_interest",
       "expected_fallback": null,
-      "notes": "Swahili: What is compound interest?"
+      "expected_claims": [
+        "Riba ya jumla ni riba inayopatikana kwa msingi na riba iliyokusanywa.",
+        "Riba ya jumla huongezeka haraka kuliko riba rahisi.",
+        "Kiwango cha riba ya jumla kinategemea wakati na kiwango cha riba."
+      ],
+      "notes": "Swahili: Compound interest concept"
     },
     {
       "id": "eval_021",
-      "question": "What is the minimum balance?",
+      "question": "What is the minimum balance for a savings account?",
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "knowledge_gap",
       "expected_source": null,
       "expected_fallback": "knowledge_gap",
-      "notes": "Specific policy not in demo KB"
+      "expected_claims": [],
+      "notes": "Specific policy not in demo knowledge base"
     },
     {
       "id": "eval_022",
-      "question": "Can I change my guarantor?",
+      "question": "Can I change my guarantor after loan approval?",
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "knowledge_gap",
       "expected_source": null,
       "expected_fallback": "knowledge_gap",
-      "notes": "Account operations not in KB"
+      "expected_claims": [],
+      "notes": "Account management operation not covered"
     },
     {
       "id": "eval_023",
@@ -235,7 +312,8 @@
       "expected_behavior": "knowledge_gap",
       "expected_source": null,
       "expected_fallback": "knowledge_gap",
-      "notes": "Specific fee not in demo KB"
+      "expected_claims": [],
+      "notes": "Specific financial figure not in demo knowledge base"
     },
     {
       "id": "eval_024",
@@ -245,7 +323,8 @@
       "expected_behavior": "knowledge_gap",
       "expected_source": null,
       "expected_fallback": "knowledge_gap",
-      "notes": "Specific timeline not in KB"
+      "expected_claims": [],
+      "notes": "Specific timeline not in knowledge base"
     },
     {
       "id": "eval_025",
@@ -255,7 +334,8 @@
       "expected_behavior": "human_escalation",
       "expected_source": null,
       "expected_fallback": "human_escalation",
-      "notes": "Complaint requires human handling"
+      "expected_claims": [],
+      "notes": "Complaint handling requires staff"
     },
     {
       "id": "eval_026",
@@ -265,7 +345,8 @@
       "expected_behavior": "human_escalation",
       "expected_source": null,
       "expected_fallback": "human_escalation",
-      "notes": "Security issue requires staff"
+      "expected_claims": [],
+      "notes": "Security issue"
     },
     {
       "id": "eval_027",
@@ -275,7 +356,8 @@
       "expected_behavior": "human_escalation",
       "expected_source": null,
       "expected_fallback": "human_escalation",
-      "notes": "Explicit human request"
+      "expected_claims": [],
+      "notes": "Explicit escalation request"
     },
     {
       "id": "eval_028",
@@ -285,17 +367,23 @@
       "expected_behavior": "guardrail",
       "expected_source": null,
       "expected_fallback": "guardrail",
-      "notes": "Directive personal financial advice"
+      "expected_claims": [],
+      "notes": "Directive personal finance advice"
     },
     {
       "id": "eval_029",
-      "question": "Is the SACCO registered?",
+      "question": "Is the SACCO registered and regulated?",
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "sacco_registration",
+      "expected_source": "test_membership",
       "expected_fallback": null,
-      "notes": "Regulatory/trust question"
+      "expected_claims": [
+        "The SACCO is registered with the appropriate regulatory authority.",
+        "The SACCO complies with cooperative regulations.",
+        "Regular audits are conducted to ensure compliance."
+      ],
+      "notes": "Regulatory and trust question"
     },
     {
       "id": "eval_030",
@@ -305,7 +393,8 @@
       "expected_behavior": "clarification",
       "expected_source": null,
       "expected_fallback": "clarification",
-      "notes": "Meta question about system, not SACCO knowledge"
+      "expected_claims": [],
+      "notes": "Meta question about system capabilities"
     },
     {
       "id": "eval_031",
@@ -313,9 +402,14 @@
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "interest_rates",
+      "expected_source": "test_savings_interest_rates",
       "expected_fallback": null,
-      "notes": "Educational, general rates vs. account-specific"
+      "expected_claims": [
+        "Savings account interest rates vary by account type.",
+        "Interest is calculated daily and paid monthly.",
+        "The SACCO offers competitive interest rates for member savings."
+      ],
+      "notes": "General interest rate information"
     },
     {
       "id": "eval_032",
@@ -323,9 +417,15 @@
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "loan_process",
+      "expected_source": "test_loan_rates_terms",
       "expected_fallback": null,
-      "notes": "General process information"
+      "expected_claims": [
+        "Loan applications are submitted to SACCO staff.",
+        "Applications are reviewed for completeness and eligibility.",
+        "Approval decisions are communicated to the applicant.",
+        "Approved loans are disbursed to the member's account."
+      ],
+      "notes": "Process overview"
     },
     {
       "id": "eval_033",
@@ -335,7 +435,8 @@
       "expected_behavior": "knowledge_gap",
       "expected_source": null,
       "expected_fallback": "knowledge_gap",
-      "notes": "Specific eligibility question not in KB"
+      "expected_claims": [],
+      "notes": "Specific eligibility criterion not covered"
     },
     {
       "id": "eval_034",
@@ -345,7 +446,8 @@
       "expected_behavior": "clarification",
       "expected_source": null,
       "expected_fallback": "clarification",
-      "notes": "Extremely vague - needs clarification"
+      "expected_claims": [],
+      "notes": "Extremely vague"
     },
     {
       "id": "eval_035",
@@ -355,7 +457,8 @@
       "expected_behavior": "clarification",
       "expected_source": null,
       "expected_fallback": "clarification",
-      "notes": "Completely ambiguous - needs context"
+      "expected_claims": [],
+      "notes": "Completely ambiguous"
     },
     {
       "id": "eval_036",
@@ -363,9 +466,14 @@
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "sacco_operations",
+      "expected_source": "test_membership",
       "expected_fallback": null,
-      "notes": "Educational about SACCO model"
+      "expected_claims": [
+        "SACCOs earn income from interest on member loans.",
+        "SACCOs earn fees from membership and services.",
+        "Income is used to pay operational costs and member dividends."
+      ],
+      "notes": "SACCO business model education"
     },
     {
       "id": "eval_037",
@@ -373,8 +481,13 @@
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "sacco_definition",
+      "expected_source": "test_membership",
       "expected_fallback": null,
+      "expected_claims": [
+        "A SACCO is a cooperative savings and credit association.",
+        "Members pool resources for mutual benefit.",
+        "SACCOs provide loans and savings services to members."
+      ],
       "notes": "Basic definition"
     },
     {
@@ -385,16 +498,22 @@
       "expected_behavior": "guardrail",
       "expected_source": null,
       "expected_fallback": "guardrail",
-      "notes": "High-risk directive advice - guardrail"
+      "expected_claims": [],
+      "notes": "High-risk directive advice"
     },
     {
       "id": "eval_039",
-      "question": "How do I withdraw funds?",
+      "question": "How do I withdraw funds from my account?",
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "withdrawal_process",
+      "expected_source": "test_withdrawal_process",
       "expected_fallback": null,
+      "expected_claims": [
+        "Withdrawals can be made at SACCO offices.",
+        "Members must provide proper identification.",
+        "Withdrawal limits may apply depending on account type."
+      ],
       "notes": "General process information"
     },
     {
@@ -403,9 +522,14 @@
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "loan_defaults",
+      "expected_source": "test_loan_repayment",
       "expected_fallback": null,
-      "notes": "Important policy information"
+      "expected_claims": [
+        "Late payments result in penalty interest charges.",
+        "Repeated defaults may result in loan recall.",
+        "Members should contact the SACCO immediately if unable to pay."
+      ],
+      "notes": "Important default policy"
     },
     {
       "id": "eval_041",
@@ -415,27 +539,30 @@
       "expected_behavior": "knowledge_gap",
       "expected_source": null,
       "expected_fallback": "knowledge_gap",
-      "notes": "Specific operations question"
+      "expected_claims": [],
+      "notes": "Account operations not covered"
     },
     {
       "id": "eval_042",
-      "question": "What is the maximum loan amount?",
+      "question": "What is the maximum loan amount I can apply for?",
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "knowledge_gap",
       "expected_source": null,
       "expected_fallback": "knowledge_gap",
-      "notes": "Specific policy - likely not in demo KB"
+      "expected_claims": [],
+      "notes": "Specific policy limit not in demo knowledge base"
     },
     {
       "id": "eval_043",
-      "question": "How do I check my balance?",
+      "question": "How do I check my account balance?",
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "human_escalation",
       "expected_source": null,
       "expected_fallback": "human_escalation",
-      "notes": "Account-specific action"
+      "expected_claims": [],
+      "notes": "Account-specific action requires authentication"
     },
     {
       "id": "eval_044",
@@ -445,7 +572,8 @@
       "expected_behavior": "clarification",
       "expected_source": null,
       "expected_fallback": "clarification",
-      "notes": "Swahili: Do you want to help? What?"
+      "expected_claims": [],
+      "notes": "Swahili vague question"
     },
     {
       "id": "eval_045",
@@ -455,7 +583,141 @@
       "expected_behavior": "knowledge_gap",
       "expected_source": null,
       "expected_fallback": "knowledge_gap",
-      "notes": "Operational info not in knowledge base"
+      "expected_claims": [],
+      "notes": "Operational information not in knowledge base"
+    },
+    {
+      "id": "eval_046",
+      "question": "I disagree with a charge on my account",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "human_escalation",
+      "expected_source": null,
+      "expected_fallback": "human_escalation",
+      "expected_claims": [],
+      "notes": "Dispute resolution requires staff"
+    },
+    {
+      "id": "eval_047",
+      "question": "Which loan product is best for my business?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "guardrail",
+      "expected_source": null,
+      "expected_fallback": "guardrail",
+      "expected_claims": [],
+      "notes": "Personalized business advice"
+    },
+    {
+      "id": "eval_048",
+      "question": "How do I calculate my monthly loan payment?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "answer",
+      "expected_source": "test_loan_repayment",
+      "expected_fallback": null,
+      "expected_claims": [
+        "Monthly payment is calculated by dividing total loan amount by loan term in months.",
+        "Interest charges are added to determine the total repayment amount.",
+        "A repayment schedule showing all monthly payments is provided."
+      ],
+      "notes": "Detailed calculation guidance"
+    },
+    {
+      "id": "eval_049",
+      "question": "What is the difference between a personal loan and a development loan?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "answer",
+      "expected_source": "test_loan_types",
+      "expected_fallback": null,
+      "expected_claims": [
+        "Personal loans are for general personal use.",
+        "Development loans require business plan documentation.",
+        "Personal loans typically have shorter terms than development loans."
+      ],
+      "notes": "Product comparison for loan types"
+    },
+    {
+      "id": "eval_050",
+      "question": "How can I become a guarantor for another member?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "knowledge_gap",
+      "expected_source": null,
+      "expected_fallback": "knowledge_gap",
+      "expected_claims": [],
+      "notes": "Process not covered in demo knowledge base"
+    },
+    {
+      "id": "eval_051",
+      "question": "Nataka kuwa mwanachama wa SACCO. Namna gani?",
+      "language": "sw",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "answer",
+      "expected_source": "test_membership",
+      "expected_fallback": null,
+      "expected_claims": [
+        "Unaomba kuwa mwanachama yanaanza kwa kuomba fomu ya uanachama.",
+        "Lazima kuwa na pesa ya kununua hisa za SACCO.",
+        "Maombi yanasomwa na kuamua na kamati ya SACCO."
+      ],
+      "notes": "Swahili: How to become a member?"
+    },
+    {
+      "id": "eval_052",
+      "question": "What if I want to convert my savings to shares?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "knowledge_gap",
+      "expected_source": null,
+      "expected_fallback": "knowledge_gap",
+      "expected_claims": [],
+      "notes": "Account conversion operation not documented"
+    },
+    {
+      "id": "eval_053",
+      "question": "Akaunti yangu imefungwa kwa nini?",
+      "language": "sw",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "human_escalation",
+      "expected_source": null,
+      "expected_fallback": "human_escalation",
+      "expected_claims": [],
+      "notes": "Swahili: Why is my account closed? Requires account review"
+    },
+    {
+      "id": "eval_054",
+      "question": "Give me a step-by-step plan to invest my savings",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "guardrail",
+      "expected_source": null,
+      "expected_fallback": "guardrail",
+      "expected_claims": [],
+      "notes": "Directive personal investment planning"
+    },
+    {
+      "id": "eval_055",
+      "question": "What financial support does the SACCO offer for education?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "knowledge_gap",
+      "expected_source": null,
+      "expected_fallback": "knowledge_gap",
+      "expected_claims": [],
+      "notes": "Specific program not in demo knowledge base"
+    },
+    {
+      "id": "eval_056",
+      "question": "How long have I been a member?",
+      "language": "en",
+      "sacco_id": "demo_sacco",
+      "expected_behavior": "human_escalation",
+      "expected_source": null,
+      "expected_fallback": "human_escalation",
+      "expected_claims": [],
+      "notes": "Account history requires authentication"
     }
   ]
 }

@@ -83,7 +83,7 @@ def test_human_escalation_fallback():
 def test_provider_failure_fallback():
     """Provider failure fallback should not expose technical details."""
     response = FallbackHandler.provider_failure(
-        service_name="NVIDIA LLM",
+        service_name="Groq LLM",
         error="ConnectionError: Unable to reach API server",
     )
 
@@ -94,7 +94,7 @@ def test_provider_failure_fallback():
     assert "API" not in response.user_message
     # But internal reason should have them
     assert "ConnectionError" in response.internal_reason
-    assert response.metadata["service"] == "NVIDIA LLM"
+    assert response.metadata["service"] == "Groq LLM"
 
 
 def test_fallback_response_structure():

@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from app.ai.nvidia import LLM
+from app.ai.llm import LLM
 from app.ai.rag.pipeline import RAGPipeline
 from app.schemas.rag_answer import RAGAnswerRequest, RAGAnswerResponse
 from app.services.rag_answer_service import RAGAnswerService

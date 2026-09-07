@@ -69,7 +69,7 @@ async def test_relevant_context_generates_grounded_answer_with_sources():
 
 
 @pytest.mark.anyio
-async def test_no_context_returns_fallback_without_calling_nvidia():
+async def test_no_context_returns_fallback_without_calling_llm():
     pipeline = FakePipeline([])
     llm = FakeLLM()
     service = RAGAnswerService(pipeline, llm)
@@ -148,10 +148,10 @@ def test_rag_answer_endpoint_uses_service(monkeypatch):
 
 
 @pytest.mark.anyio
-async def test_nvidia_failure_is_propagated_for_route_handling():
+async def test_llm_provider_failure_is_propagated_for_route_handling():
     class FailingLLM:
         async def generate(self, messages):
-            raise RuntimeError("NVIDIA request timed out")
+            raise RuntimeError("Groq request timed out")
 
     service = RAGAnswerService(FakePipeline([result()]), FailingLLM())
 

@@ -3,7 +3,7 @@
 The retriever/vector store depend only on :class:`EmbeddingProvider`. The
 concrete implementation may be a local sentence-transformers model, a remote
 API, or a deterministic mock for offline tests. This module is intentionally
-NOT coupled to NVIDIA.
+provider-agnostic and not coupled to a specific LLM backend.
 """
 
 from abc import ABC, abstractmethod

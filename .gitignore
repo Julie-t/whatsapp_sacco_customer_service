@@ -7,5 +7,6 @@ venv/
 dist/
 build/
 .pytest_cache/
+evaluations/results/*.json
 *.sqlite
 *.db

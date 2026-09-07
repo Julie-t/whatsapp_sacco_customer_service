@@ -105,6 +105,15 @@ def test_retrieval_ranks_relevant_documents_first():
     assert pipeline.search("How does loan repayment work?")[0].document_id == "loan"
 
 
+def test_retrieval_uses_query_terms_as_a_bounded_tie_breaker():
+    pipeline = make_pipeline()
+
+    results = pipeline.search("compound interest", top_k=2)
+
+    assert results[0].document_id == "compound"
+
+
+
 def test_metadata_filtering_excludes_other_languages():
     pipeline = make_pipeline()
 

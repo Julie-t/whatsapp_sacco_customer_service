@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 """Apply versioned PostgreSQL migrations without changing schema at startup."""
 
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.database.connection import get_connection
 

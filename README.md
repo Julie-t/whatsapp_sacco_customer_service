@@ -11,7 +11,7 @@ WhatsApp-first AI Member Companion for Kenyan SACCOs.
 
 ## RAG Development Retrieval
 
-System 4 retrieves evidence only; it does not generate answers or call NVIDIA.
+System 4 retrieves evidence only; it does not generate answers or call the LLM layer.
 The default embedding model runs locally after it has been downloaded once.
 
 ```bash
@@ -61,7 +61,7 @@ app/
   api/routes/whatsapp.py         # WhatsApp webhook
   services/whatsapp_service.py   # Twilio service abstraction
   ai/
-    nvidia.py                    # LLM abstraction (Groq-backed)
+    llm.py                       # Generic LLM abstraction (Groq-backed)
     providers/groq.py            # Groq provider
   database/connection.py         # PostgreSQL connection
 ```

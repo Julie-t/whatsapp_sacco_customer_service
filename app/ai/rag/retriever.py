@@ -1,12 +1,12 @@
 """Retriever: query -> embedding -> vector search -> structured results.
 
 This module returns *evidence* (retrieved chunks with scores), never answers.
-It does not call NVIDIA or any LLM. Metadata filtering is passed straight
-through to the vector store, so adding filterable fields requires no change
-here.
+It does not call the LLM layer. Metadata filtering is passed straight through
+to the vector store, so adding filterable fields requires no change here.
 """
 
 import logging
+import re
 import time
 from typing import Any
 
@@ -58,6 +58,8 @@ class Retriever:
         if threshold > 0.0:
             results = [r for r in results if r.score > threshold]
 
+        results = _rerank_by_query_terms(query, results)
+
         logger.info(
             "RAG retrieval | query=%r results=%d embed=%.3fs retrieve=%.3fs total=%.3fs",
             query[:80],
@@ -67,3 +69,29 @@ class Retriever:
             total_latency,
         )
         return results
+
+
+def _rerank_by_query_terms(query: str, results: list[RAGResult]) -> list[RAGResult]:
+    """Use exact query terms only as a small, deterministic ranking tie-breaker."""
+    query_terms = _terms(query)
+    if not query_terms or len(results) < 2:
+        return results
+
+    def ranking_key(result: RAGResult) -> tuple[float, float]:
+        document_text = f"{result.title} {result.topic} {result.content}".lower()
+        overlap = len(query_terms & _terms(document_text)) / len(query_terms)
+        return (result.score + min(0.04, overlap * 0.04), result.score)
+
+    return sorted(results, key=ranking_key, reverse=True)
+
+
+def _terms(text: str) -> set[str]:
+    stopwords = {
+        "a", "an", "and", "are", "can", "do", "for", "how", "i", "is", "my",
+        "of", "on", "the", "to", "what", "where", "which", "with",
+    }
+    return {
+        token[:-1] if token.endswith("s") and len(token) > 4 else token
+        for token in re.findall(r"[a-zA-Z]+", text.lower())
+        if token not in stopwords and len(token) > 2
+    }

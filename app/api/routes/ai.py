@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from app.ai.nvidia import LLM
+from app.ai.llm import LLM
 from app.ai.intent_router import IntentRouter
 from app.ai.prompts import SYSTEM_PROMPT
 from app.schemas.ai import AICompletionRequest, AICompletionResponse

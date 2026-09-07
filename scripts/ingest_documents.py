@@ -2,7 +2,10 @@
 
 import argparse
 import logging
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.ai.rag.embeddings import SentenceTransformerEmbeddingProvider
 from app.ai.rag.ingestion import DocumentIngestor

@@ -23,6 +23,7 @@ class RAGAnswerSource(BaseModel):
 
 class RAGAnswerResponse(BaseModel):
     query: str
+    reformulated_query: str | None = None
     answer: str
     sources: list[RAGAnswerSource] = Field(default_factory=list)
     grounded: bool
@@ -39,4 +40,8 @@ class RAGAnswerResponse(BaseModel):
     fallback_category: str | None = Field(
         default=None,
         description="Internal: fallback category if no answer was generated",
+    )
+    provider_failure_type: str | None = Field(
+        default=None,
+        description="Internal: provider failure classification for evaluation",
     )

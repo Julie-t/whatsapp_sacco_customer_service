@@ -12,6 +12,14 @@ class Settings(BaseSettings):
     GROQ_API_KEY: str = ""
     GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
     GROQ_MODEL: str = "openai/gpt-oss-120b"
+    GROQ_REASONING_EFFORT: str = "low"
+
+    # Evaluation-only provider controls. These are not used by normal
+    # WhatsApp request orchestration.
+    EVAL_PROVIDER_MAX_RETRIES: int = 2
+    EVAL_PROVIDER_MIN_RETRY_DELAY: float = 1.0
+    EVAL_PROVIDER_MAX_RETRY_DELAY: float = 60.0
+    EVAL_REQUEST_DELAY_SECONDS: float = 10.0
 
     twilio_account_sid: str = ""
     twilio_auth_token: str = ""
@@ -30,8 +38,8 @@ class Settings(BaseSettings):
     QDRANT_COLLECTION: str = "sacco_knowledge"
 
     # Embeddings. Use a sentence-transformers model that can run locally.
-    # The embedding implementation is provider-agnostic and is NOT tied to
-    # NVIDIA. Override EMBEDDING_MODEL to swap the model.
+    # The embedding implementation is provider-agnostic and is not tied to a
+    # specific LLM provider. Override EMBEDDING_MODEL to swap the model.
     EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
 
     # Retrieval defaults

@@ -79,8 +79,9 @@ async def test_rag_answer_service_with_good_results():
 
 @pytest.mark.anyio
 async def test_rag_answer_service_with_low_score_results():
-    """Service should use fallback when retrieval confidence is low."""
-    pipeline = FakePipeline([make_result(score=0.2)])
+    """Service should use fallback when retrieval confidence is below RAG_MIN_SCORE."""
+    # Use score 0.1 which is below the RAG_MIN_SCORE threshold of 0.2
+    pipeline = FakePipeline([make_result(score=0.1)])
     llm = FakeLLM()
     service = RAGAnswerService(pipeline, llm)
 
