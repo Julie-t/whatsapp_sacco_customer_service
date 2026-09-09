@@ -12,6 +12,8 @@ from app.services.rag_answer_service import RAGAnswerService
 from app.config.settings import settings
 
 from .offline import seed_demo_store
+from .comparison import compare_reports, render_comparison
+from .history import load_baseline, load_snapshots, run_metadata, save_snapshot, set_baseline
 from .reporting import render_case_answers, render_report, write_report
 from .runner import EvaluationRunner
 
@@ -41,7 +43,11 @@ def _offline_terms(text: str) -> set[str]:
     }
 
 
-async def run(dataset: Path, output: Path, live: bool, show_answers: bool, limit: int | None, verification_mode: str) -> int:
+async def run(dataset: Path, output: Path, live: bool, show_answers: bool, limit: int | None, verification_mode: str, is_baseline: bool = False, replace_baseline: bool = False) -> int:
+    history_dir = output.parent / "history"
+    if is_baseline and history_dir.joinpath("baseline.json").exists() and not replace_baseline:
+        print("An active baseline already exists. Use --replace-baseline to replace it.")
+        return 2
     if live:
         pipeline = RAGPipeline()
         llm = LLM()
@@ -59,15 +65,43 @@ async def run(dataset: Path, output: Path, live: bool, show_answers: bool, limit
         request_delay_seconds=settings.EVAL_REQUEST_DELAY_SECONDS if live else 0.0,
         verification_mode=verification_mode,
     ).evaluate(str(dataset), limit=limit)
-    report["metadata"]["mode"] = "LIVE" if live else "OFFLINE / DETERMINISTIC"
-    report["metadata"]["provider_name"] = "Groq" if live else "None"
-    report["metadata"]["model"] = settings.GROQ_MODEL if live else "Offline deterministic generator"
+    mode = "live" if live else "offline"
+    provider = "Groq" if live else "None"
+    model = settings.GROQ_MODEL if live else "offline-deterministic"
+    report["metadata"]["mode"] = mode
+    report["metadata"]["provider_name"] = provider
+    report["metadata"]["model"] = model
+    report["metadata"]["generated_answer_metrics"] = (
+        "LIVE LLM QUALITY" if live else "DETERMINISTIC SMOKE TEST - NOT REPRESENTATIVE OF LIVE LLM QUALITY"
+    )
+    report["run"] = run_metadata(
+        report,
+        root=output.parent.parent.parent,
+        dataset=dataset,
+        mode=mode,
+        provider=provider,
+        model=model,
+        is_baseline=is_baseline,
+    )
+    snapshots = load_snapshots(history_dir)
+    previous = snapshots[-1] if snapshots else None
+    baseline = load_baseline(history_dir)
+    report["comparison"] = {
+        "previous": compare_reports(report, previous) if previous else None,
+        "baseline": compare_reports(report, baseline) if baseline else None,
+    }
     write_report(report, output)
+    snapshot = save_snapshot(report, history_dir)
+    if is_baseline:
+        set_baseline(report, history_dir, replace=replace_baseline)
     print(render_report(report))
     if show_answers:
         mode = "live" if live else "offline"
         print(render_case_answers(report, mode, str(dataset)))
     print(f"JSON report: {output}")
+    if previous:
+        print(render_comparison(report["comparison"]["previous"], report, previous))
+    print(f"Historical snapshot: {snapshot}")
     return 0 if report["metadata"]["errors"] == 0 else 1
 
 
@@ -89,8 +123,10 @@ def main() -> int:
         action="store_true",
         help="Print setup and each generated answer in the CLI",
     )
+    parser.add_argument("--baseline", action="store_true", help="Mark this run as the active comparison baseline")
+    parser.add_argument("--replace-baseline", action="store_true", help="Replace an existing active baseline")
     args = parser.parse_args()
-    return asyncio.run(run(args.dataset, args.output, args.live, args.show_answers, args.limit, args.verification_mode))
+    return asyncio.run(run(args.dataset, args.output, args.live, args.show_answers, args.limit, args.verification_mode, args.baseline, args.replace_baseline))
 
 
 if __name__ == "__main__":

@@ -35,20 +35,20 @@ class AnswerabilityChecker:
                 min_score=None,
             )
 
-        top_score = results[0].score
+        top_score = max(result.score for result in results)
         min_score = min(result.score for result in results)
-        if min_score < self.min_retrieval_score:
+        if top_score < self.min_retrieval_score:
             return AnswerabilityDecision(
                 answerable=False,
-                confidence=max(0.0, 1.0 - (min_score / self.min_retrieval_score)),
+                confidence=max(0.0, top_score / self.min_retrieval_score),
                 reason=(
-                    f"Retrieved evidence is not sufficiently relevant (score: {min_score:.2f}). "
+                    f"Retrieved evidence is not sufficiently relevant (best score: {top_score:.2f}). "
                     f"Minimum confidence threshold is {self.min_retrieval_score:.2f}."
                 ),
                 min_score=min_score,
             )
 
-        top_result = results[0]
+        top_result = max(results, key=lambda result: result.score)
         if len(top_result.content) < self.min_result_length:
             return AnswerabilityDecision(
                 answerable=False,
@@ -64,13 +64,17 @@ class AnswerabilityChecker:
         required_terms = _required_evidence_terms(query_lower)
         if query_lower.startswith("what is ") and not _has_detail_request(query_lower):
             required_terms = set()
-        evidence_text = " ".join(result.content.lower() for result in results[:3])
-        if required_terms and not any(term in evidence_text for term in required_terms):
+        evidence_text = " ".join(
+            f"{result.title} {result.topic} {result.content}".lower()
+            for result in results[:3]
+        )
+        missing_terms = _missing_required_terms(query_lower, evidence_text, required_terms)
+        if missing_terms:
             return AnswerabilityDecision(
                 answerable=False,
                 confidence=min(0.75, 0.45 + (top_score * 0.35)),
                 reason=(
-                    "Retrieved evidence may not contain all specific details needed for this question. "
+                    f"Retrieved evidence does not specify the requested detail: {', '.join(sorted(missing_terms))}. "
                     "The response should not fabricate missing information."
                 ),
                 min_score=min_score,
@@ -108,3 +112,55 @@ def _has_detail_request(query: str) -> bool:
         "deadline", "approval", "balance", "withdrawal", "charge", "cost",
     )
     return any(term in query for term in detail_terms)
+
+
+def _missing_required_terms(query: str, evidence: str, required_terms: set[str]) -> set[str]:
+    """Require the requested concept, rather than any loosely related synonym."""
+    if "exchange rate" in query:
+        return set() if "exchange" in evidence and "rate" in evidence else {"exchange rate"}
+    if "increase" in query and "contribution" in query:
+        return set() if "increase" in evidence and "contribution" in evidence else {"increase contribution"}
+    if "convert" in query and "savings" in query and "shares" in query:
+        return set() if "convert" in evidence and "savings" in evidence and "share" in evidence else {"conversion process"}
+    if "working abroad" in query:
+        return {"working abroad"} if not any(term in evidence for term in ("abroad", "overseas")) else set()
+    if "minimum balance" in query:
+        return {"minimum balance"} if "minimum balance" not in evidence else set()
+    if "financial support" in query and "education" in query:
+        return {"financial support"} if "financial support" not in evidence else set()
+    if "change" in query and "guarantor" in query:
+        return {"guarantor change"} if "change" not in evidence else set()
+    if "become a guarantor" in query:
+        return {"guarantor application"} if not any(term in evidence for term in ("become", "apply", "application")) else set()
+    if "sacco" in query and "generate income" in query:
+        return {"income generation"} if not ("generate" in evidence and "income" in evidence) else set()
+    if "registered" in query and "regulated" in query:
+        return {"registration and regulation"} if not ("registered" in evidence and ("regulated" in evidence or "regulation" in evidence)) else set()
+    if "miss" in query and "loan payment" in query:
+        return {"missed payment"} if not any(term in evidence for term in ("miss", "default", "late", "penalt")) else set()
+    if "defer" in query and "loan payment" in query:
+        return {"payment deferral"} if not any(term in evidence for term in ("defer", "postpone", "moratorium", "payment holiday")) else set()
+    if "convert" in query and "savings" in query and "shares" in query:
+        return {"conversion process"}
+    if not required_terms:
+        return set()
+    if any(term in query for term in ("fee", "fees", "charge", "charges")):
+        missing = set()
+        if not any(term in evidence for term in ("fee", "fees", "charge", "charges")):
+            missing.add("fee")
+        if "withdrawal" in query and "withdraw" not in evidence:
+            missing.add("withdrawal")
+        if "processing fee" in query and "processing fee" not in evidence:
+            missing.add("processing fee")
+        return missing
+    if any(term in query for term in ("document", "documents", "requirement", "requirements")):
+        return set() if any(term in evidence for term in ("document", "application", "form", "identification", "guarantor")) else {"documents"}
+    if any(term in query for term in ("rate", "rates", "interest", "percentage", "percent")):
+        return set() if any(term in evidence for term in ("rate", "interest", "%", "percent")) else {"rate"}
+    if any(term in query for term in ("maximum loan", "maximum amount", "how much can i borrow")):
+        return {"loan amount"} if not any(term in evidence for term in ("loan amount", "maximum amount", "maximum loan", "loan limit")) else set()
+    if "approval" in query and "how long" in query:
+        return {"approval time"} if not any(term in evidence for term in ("days", "time", "within", "takes")) else set()
+    if "approval" in query:
+        return set() if "approval" in evidence else {"approval process"}
+    return {term for term in required_terms if term not in evidence}

@@ -7,6 +7,8 @@ venv/
 dist/
 build/
 .pytest_cache/
-evaluations/results/*.json
+evaluations/results/latest_report.json
+evaluations/results/history/*.json
+!evaluations/results/history/.gitkeep
 *.sqlite
 *.db

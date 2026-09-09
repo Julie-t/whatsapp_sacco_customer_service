@@ -64,7 +64,30 @@ def _sentences(text: str) -> list[str]:
 
 def _keywords(text: str) -> set[str]:
     stopwords = {"what", "is", "the", "a", "an", "for", "do", "i", "to", "and", "of", "how", "can", "my", "are"}
-    return {token for token in re.findall(r"[a-zA-Z]+", text.lower()) if token not in stopwords and len(token) > 2}
+    aliases = {
+        "documents": "document",
+        "shares": "share",
+        "savings": "saving",
+        "withdraw": "withdrawal",
+        "payments": "repayment",
+        "payment": "repayment",
+        "repayments": "repayment",
+        "repaying": "repayment",
+        "defer": "deferral",
+        "deferring": "deferral",
+        "regulated": "regulation",
+        "regulatory": "regulation",
+        "requirements": "requirement",
+    }
+    keywords = set()
+    for token in re.findall(r"[a-zA-Z]+", text.lower()):
+        if token in stopwords or len(token) <= 2:
+            continue
+        token = aliases.get(token, token)
+        if token.endswith("s") and len(token) > 4:
+            token = token[:-1]
+        keywords.add(token)
+    return keywords
 
 
 def _claim_supported(claim: str, evidence_lower: str) -> bool:

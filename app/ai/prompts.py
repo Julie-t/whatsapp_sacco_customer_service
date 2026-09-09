@@ -76,6 +76,11 @@ Given the member's message, output JSON only:
 - likely_needs_human: true for disputes, complaints, fraud, account changes, or
     anything you can't confidently place in a financial-education/product-info/goal-
     planning category.
+- likely_needs_human: ALSO true for vague or ambiguous questions that lack a clear
+    subject or product. Examples: "How much can I get?", "What can I get?",
+    "Tell me about loans", "What should I do?", "How much?". These are too
+    underspecified for a reliable answer — set likely_needs_human=true so the
+    system asks the member to clarify.
 - General questions about SACCO products, loan requirements, membership, savings,
     or financial education must use needs_member_data=false and
     likely_needs_human=false.

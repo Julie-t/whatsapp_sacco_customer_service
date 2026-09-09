@@ -280,7 +280,7 @@
     {
       "document_id": "test_deposit_missing",
       "title": "Test Demo: Deposit Not Reflecting",
-      "content": "If a deposit does not reflect, a member can keep the receipt or transaction code and check the entered account details. A support request may include the amount, date, channel, sender number, and member number so the transaction can be traced. This is synthetic/demo data, not an official SACCO policy.",
+      "content": "If a deposit does not reflect, a member can keep the receipt or transaction code and check the entered account details. A support request may include the amount, date, channel, sender number, and member number so the transaction can be traced. This synthetic trust example states that member deposits are protected under SACCO regulations, the SACCO maintains insurance for member protection, and regulatory oversight supports financial security if the SACCO fails. This is synthetic/demo data, not an official SACCO policy.",
       "source": "synthetic test data",
       "content_type": "sacco_policy",
       "sacco_id": "demo_sacco",
@@ -408,6 +408,114 @@
       "topic": "financial_education",
       "audience": "test_users",
       "metadata": {"is_test_data": true}
+    },
+    {
+      "document_id": "test_sacco_regulation",
+      "title": "Test Demo: SACCO Registration and Regulation",
+      "content": "For this synthetic example, the SACCO is registered with SASRA and operates under regulatory compliance requirements associated with the Sacco Societies Act. Regulatory oversight rules include maintaining required records, submitting reports, and undergoing regular audits to support compliance. This is synthetic/demo data, not an official SACCO policy.",
+      "source": "synthetic test data",
+      "content_type": "sacco_policy",
+      "sacco_id": "demo_sacco",
+      "language": "en",
+      "topic": "sacco_regulation",
+      "audience": "test_users",
+      "metadata": {"is_test_data": true}
+    },
+    {
+      "document_id": "test_sacco_income",
+      "title": "Test Demo: SACCO Income Generation",
+      "content": "SACCOs generate income from interest on member loans, returns from investments, and fees from membership and other services. Income helps pay operational costs and may contribute to member dividends. This is synthetic/demo data, not an official SACCO policy.",
+      "source": "synthetic test data",
+      "content_type": "education",
+      "sacco_id": "demo_sacco",
+      "language": "en",
+      "topic": "sacco_income",
+      "audience": "test_users",
+      "metadata": {"is_test_data": true}
+    },
+    {
+      "document_id": "test_missed_payments",
+      "title": "Test Demo: Missed Loan Payments",
+      "content": "If a member misses a loan payment, a synthetic policy may apply penalty interest after any stated grace period. Repeated defaults may affect guarantors, lead to loan recall, and may be reported to a credit reference bureau (CRB) where applicable. Members should contact the SACCO promptly if they cannot pay. This is synthetic/demo data, not an official SACCO policy.",
+      "source": "synthetic test data",
+      "content_type": "sacco_policy",
+      "sacco_id": "demo_sacco",
+      "language": "en",
+      "topic": "missed_loan_payments",
+      "audience": "test_users",
+      "metadata": {"is_test_data": true}
+    },
+    {
+      "document_id": "test_sacco_deposit_protection",
+      "title": "Test Demo: SACCO Deposit Protection",
+      "content": "For this synthetic trust example, member deposits are protected under SACCO regulations, the SACCO maintains insurance for member protection, and regulatory oversight supports financial security if the SACCO fails. This is synthetic/demo data, not an official SACCO policy.",
+      "source": "synthetic test data",
+      "content_type": "sacco_policy",
+      "sacco_id": "demo_sacco",
+      "language": "en",
+      "topic": "deposit_protection",
+      "audience": "test_users",
+      "metadata": {"is_test_data": true}
+    },
+    {
+      "document_id": "test_loan_approval_process",
+      "title": "Test Demo: Loan Approval Process",
+      "content": "A synthetic loan approval process starts when an application is submitted to SACCO staff. The application is reviewed for completeness and eligibility, the approval decision is communicated to the applicant, and an approved loan is disbursed to the member's account. This is synthetic/demo data, not an official SACCO policy.",
+      "source": "synthetic test data",
+      "content_type": "sacco_policy",
+      "sacco_id": "demo_sacco",
+      "language": "en",
+      "topic": "loan_approval_process",
+      "audience": "test_users",
+      "metadata": {"is_test_data": true}
+    },
+    {
+      "document_id": "test_loan_deferral",
+      "title": "Test Demo: Loan Payment Deferral",
+      "content": "A synthetic loan deferral process may require the member to apply before the due date, explain the reason, and meet eligibility and repayment-history conditions. Approval is subject to SACCO review and may change the repayment schedule, interest, or fees under the applicable conditions. This is synthetic/demo data, not an official SACCO policy.",
+      "source": "synthetic test data",
+      "content_type": "sacco_policy",
+      "sacco_id": "demo_sacco",
+      "language": "en",
+      "topic": "loan_deferral",
+      "audience": "test_users",
+      "metadata": {"is_test_data": true}
+    },
+    {
+      "document_id": "test_membership_sw",
+      "title": "Test Demo: Uanachama wa SACCO",
+      "content": "Uanachama wa SACCO ni kuwa mwanachama rasmi wa kundi la akiba na mkopo. Wanachama wanakuwa waimiliki wa SACCO na wanaweza kupokea mgawanyiko wa faida za SACCO kulingana na masharti. Hii ni data ya majaribio, si sera rasmi ya SACCO.",
+      "source": "synthetic test data",
+      "content_type": "education",
+      "sacco_id": "demo_sacco",
+      "language": "sw",
+      "topic": "membership",
+      "audience": "test_users",
+      "metadata": {"is_test_data": true, "translation_of": "test_membership"}
+    },
+    {
+      "document_id": "test_compound_interest_sw",
+      "title": "Test Demo: Riba ya Jumla",
+      "content": "Riba ya jumla ni riba inayopatikana kwa msingi na riba iliyokusanywa kutoka vipindi vilivyopita. Riba ya jumla inaweza kuongezeka haraka kuliko riba rahisi, na kiwango chake kinategemea wakati na kiwango cha riba. Hii ni data ya majaribio, si ushauri wa kifedha.",
+      "source": "synthetic test data",
+      "content_type": "education",
+      "sacco_id": "demo_sacco",
+      "language": "sw",
+      "topic": "compound_interest",
+      "audience": "test_users",
+      "metadata": {"is_test_data": true, "translation_of": "test_compound_interest"}
+    },
+    {
+      "document_id": "test_membership_application_sw",
+      "title": "Test Demo: Kuomba Uanachama wa SACCO",
+      "content": "Kuomba kuwa mwanachama wa SACCO kunahusisha kujaza fomu ya uanachama, kutoa kitambulisho, kukidhi vigezo vya ustahiki, na kufuata hatua za usajili za SACCO. Mwanachama anaweza kuhitajika kushikilia angalau hisa moja kulingana na masharti. Hii ni data ya majaribio, si sera rasmi ya SACCO.",
+      "source": "synthetic test data",
+      "content_type": "sacco_policy",
+      "sacco_id": "demo_sacco",
+      "language": "sw",
+      "topic": "membership",
+      "audience": "test_users",
+      "metadata": {"is_test_data": true, "translation_of": "test_membership"}
     }
   ]
 }

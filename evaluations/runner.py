@@ -7,7 +7,7 @@ import logging
 
 from app.ai.rag.answerability import AnswerabilityChecker
 from app.ai.rag.answer_verifier import AnswerVerifier
-from app.ai.rag.context import build_context
+from app.ai.rag.context import build_context, select_context
 from app.schemas.intent import RequestTriageResult
 from app.config.settings import settings
 from app.services.rag_answer_service import RAGAnswerService
@@ -64,29 +64,50 @@ class EvaluationRunner:
                     result.failure_type = _failure_type(result)
                 return result
 
-            retrieved = self.pipeline.search(
-                query=case.question,
-                sacco_id=case.sacco_id,
-                language=case.language,
-                top_k=5,
-            )
-            result.reformulated_query = case.question
+            if self.answer_service is not None:
+                result.reformulated_query, retrieved = await self.answer_service.retrieve_evidence(
+                    query=case.question,
+                    sacco_id=case.sacco_id,
+                    language=case.language,
+                    top_k=5,
+                )
+            else:
+                retrieved = self.pipeline.search(
+                    query=case.question,
+                    sacco_id=case.sacco_id,
+                    language=case.language,
+                    top_k=5,
+                )
+                result.reformulated_query = case.question
             ranked_ids = [item.document_id for item in retrieved]
+            expected_result = next(
+                (item for item in retrieved if item.document_id == case.expected_source),
+                None,
+            )
+            expected_rank = ranked_ids.index(case.expected_source) + 1 if case.expected_source in ranked_ids else None
+            top_score = retrieved[0].score if retrieved else None
             result.retrieval = {
                 "query": case.question,
                 "top_retrieved": ranked_ids,
+                "top_1_source": ranked_ids[0] if ranked_ids else None,
+                "top_3_sources": ranked_ids[:3],
+                "top_5_sources": ranked_ids[:5],
                 "scores": [item.score for item in retrieved],
                 "retrieved_sources": [
                     {"document_id": item.document_id, "score": item.score, "rank": rank}
                     for rank, item in enumerate(retrieved, start=1)
                 ],
-                "expected_source_rank": (
-                    ranked_ids.index(case.expected_source) + 1
-                    if case.expected_source in ranked_ids else None
+                "expected_source_rank": expected_rank,
+                "expected_source_score": expected_result.score if expected_result else None,
+                "top_1_expected_score_gap": (
+                    top_score - expected_result.score
+                    if top_score is not None and expected_result is not None else None
                 ),
+                "expected_source_retrieved": expected_result is not None,
                 **recall_metrics(ranked_ids, case.expected_source),
             }
-            decision = self.answerability_checker.check(case.question, retrieved)
+            selected_results = select_context(case.question, retrieved)
+            decision = self.answerability_checker.check(case.question, selected_results)
             result.answerability = {
                 "answerable": decision.answerable,
                 "confidence": decision.confidence,
@@ -107,7 +128,7 @@ class EvaluationRunner:
                 result.provider_failure_type = response.provider_failure_type
                 result.fallback = _fallback_metric(case, result.actual_behavior)
                 if result.actual_behavior == "answer":
-                    evidence = build_context(retrieved)
+                    evidence = build_context(selected_results)
                     deterministic_verification = self.verifier.verify(response.answer, evidence, case.expected_claims)
                     checks = 2 if self.verification_mode == "high-risk" and deterministic_verification.risk == "HIGH" else 1
                     if self.verification_llm is not None:
@@ -205,11 +226,12 @@ def deterministic_route(question: str) -> RequestTriageResult:
     human_terms = (
         "fraud", "don't recognize", "do not recognize", "complain", "complaint",
         "speak to someone", "talk to someone", "human", "staff", "agent", "lost my pin",
-        "lost pin", "withdrawal", "withdraw immediately", "disagree with a charge",
+        "lost pin", "withdraw immediately", "withdrawal immediately", "disagree with a charge",
         "account balance", "account is closed", "account closed", "akaunti imefungwa",
     )
     member_terms = (
-        "my balance", "my loan", "my account", "my transaction", "account balance",
+        "my balance", "my loan balance", "my loan status", "my loan application",
+        "my transaction", "account balance",
         "how long have i been a member", "member since", "membership duration",
         "akaunti yangu", "account imefungwa", "loan yangu",
     )
@@ -217,8 +239,13 @@ def deterministic_route(question: str) -> RequestTriageResult:
         "should i invest", "tell me where to invest", "investment recommendation",
         "which loan product is best", "step-by-step plan to invest", "stock market",
         "guaranteed return", "invest in crypto", "investment in crypto",
+        "what percentage of my money should", "how much should i invest",
     )
-    ambiguous_terms = ("how much can i get", "how much can i borrow", "what can i get")
+    ambiguous_terms = (
+        "how much can i get", "how much can i borrow", "what can i get",
+        "what languages", "what should i do", "tell me about loans",
+    )
+    known_short_questions = ("what is interest", "what is a sacco")
     language = "sw" if any(term in normalized for term in ("nini", "naweza", "yangu", "kuhusu", "loan yangu", "akaunti", "mwanachama", "namna gani")) else "en"
     if human := any(term in normalized for term in human_terms):
         return RequestTriageResult(language=language, needs_member_data=False, likely_needs_human=human, reasoning="Sensitive request requires staff routing.")
@@ -226,7 +253,10 @@ def deterministic_route(question: str) -> RequestTriageResult:
         return RequestTriageResult(language=language, needs_member_data=True, likely_needs_human=False, reasoning="Request requires the member's own data.")
     if any(term in normalized for term in guardrail_terms):
         return RequestTriageResult(language=language, needs_member_data=False, likely_needs_human=True, reasoning="Directive financial request requires staff guidance.")
-    if any(term in normalized for term in ambiguous_terms) or len(normalized.split()) <= 3:
+    if any(term in normalized for term in ambiguous_terms) or (
+        len(normalized.split()) <= 3
+        and not any(term in normalized for term in known_short_questions)
+    ):
         return RequestTriageResult(language=language, needs_member_data=False, likely_needs_human=True, reasoning="Question is too ambiguous for reliable RAG routing.")
     return RequestTriageResult(language=language, needs_member_data=False, likely_needs_human=False, reasoning="General information request.")
 
@@ -234,13 +264,15 @@ def deterministic_route(question: str) -> RequestTriageResult:
 def _routed_behavior(triage: RequestTriageResult, question: str) -> str | None:
     normalized = question.lower()
     if triage.likely_needs_human:
-        if any(term in normalized for term in ("complain", "complaint", "fraud", "recognize", "speak to someone", "talk to someone", "human", "staff", "agent", "lost", "withdrawal", "charge")):
+        if any(term in normalized for term in ("complain", "complaint", "fraud", "recognize", "speak to someone", "talk to someone", "human", "staff", "agent", "lost", "withdrawal", "withdraw immediately", "withdrawal immediately", "account balance", "charge", "akaunti imefungwa", "imefungwa", "account closed")):
             return "human_escalation"
-        if any(term in normalized for term in ("should i invest", "guaranteed return", "recommendation", "stock market", "invest", "best for my business")):
+        if any(term in normalized for term in ("should i invest", "guaranteed return", "recommendation", "stock market", "invest", "best for my business", "what percentage of my money should", "how much should i invest")):
             return "guardrail"
         return "clarification"
     if triage.needs_member_data:
-        if any(term in normalized for term in ("how long have i been a member", "member since", "membership duration")):
+        if any(term in normalized for term in ("imefungwa", "account closed", "account is closed")):
+            return "human_escalation"
+        if any(term in normalized for term in ("how long have i been a member", "member since", "membership duration", "account balance")):
             return "human_escalation"
         return "knowledge_gap"
     return None

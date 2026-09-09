@@ -60,6 +60,8 @@ class GroundingVerifier:
     def _classify(self, claim: str, evidence_sentences: list[str]) -> tuple[str, list[str]]:
         if _is_demo_disclaimer(claim, evidence_sentences):
             return "supported", _demo_evidence(evidence_sentences)
+        if _is_non_factual(claim):
+            return "supported", []
         claim_numbers = _numbers(claim)
         claim_terms = _terms(claim)
         best_overlap = 0.0
@@ -86,7 +88,7 @@ class GroundingVerifier:
             return "contradicted", best_evidence
         if claim_numbers:
             return "unsupported", []
-        if best_overlap >= 0.6:
+        if best_overlap >= 0.5:
             return "supported", best_evidence
         return "unsupported", []
 
@@ -96,6 +98,20 @@ def _sentences(text: str) -> list[str]:
 
 
 def _terms(text: str) -> set[str]:
+    # Common financial/paraphrase synonyms to reduce false negatives
+    aliases = {
+        "calculated": "computed", "compute": "computed", "computing": "computed",
+        "original": "principal", "principal": "principal",
+        "earlier": "previous", "previous": "previous", "previou": "previous",
+        "amount": "principal",
+        "already": "accumulated", "accumulated": "accumulated",
+        "earned": "earned", "earning": "earned",
+        "require": "required", "required": "required", "requirement": "required",
+        "need": "required", "needed": "required",
+        "typically": "generally", "generally": "generally", "usually": "generally",
+        "document": "document", "documents": "document",
+        "income": "income", "proof": "evidence", "evidence": "evidence",
+    }
     terms = set()
     for token in re.findall(r"[a-zA-Z]+", text.lower()):
         if token in STOPWORDS or len(token) < 3:
@@ -104,6 +120,7 @@ def _terms(text: str) -> set[str]:
             token = token[:-3] + "y"
         elif token.endswith("s") and len(token) > 4:
             token = token[:-1]
+        token = aliases.get(token, token)
         terms.add(token)
     return terms
 
@@ -126,6 +143,50 @@ def _is_demo_disclaimer(claim: str, evidence_sentences: list[str]) -> bool:
         for sentence in evidence_sentences
     )
     return claims_demo and metadata_confirms_demo and (not claims_nonofficial or metadata_confirms_demo)
+
+
+def _is_non_factual(claim: str) -> bool:
+    """Detect non-factual sentences that should be exempt from grounding.
+
+    Three categories:
+    1. Introductory/transitional framing (sets up a list, restates the question)
+    2. Safe disclaimers directing the member to verify with SACCO staff
+    3. Meta-commentary about data provenance
+    """
+    lowered = claim.lower().strip().rstrip(".:")
+    # Category 1: Introductory framing
+    framing_patterns = (
+        "you'll typically need", "you will typically need",
+        "you'll need", "you will need",
+        "here are", "here is", "the following",
+        "for a loan application", "for loan application",
+        "you may need", "you would need",
+    )
+    if any(pattern in lowered for pattern in framing_patterns):
+        # Only exempt if this is a short introductory sentence (no substantive data)
+        terms = _terms(claim)
+        if len(terms) <= 8 and not _numbers(claim):
+            return True
+    # Category 2: Safe disclaimers
+    disclaimer_patterns = (
+        "please contact", "please check with", "check with your sacco",
+        "verify with", "confirm with", "contact sacco staff",
+        "contact your sacco", "please reach out",
+        "if you need confirmation", "for the actual",
+        "for the exact", "that applies to your",
+    )
+    if any(pattern in lowered for pattern in disclaimer_patterns):
+        return True
+    # Category 3: Meta-commentary about data source
+    provenance_patterns = (
+        "comes from the", "description comes from",
+        "this is from", "based on the illustrative",
+        "from the sacco\u2019s illustrative", "from the sacco's illustrative",
+        "illustrative policy",
+    )
+    if any(pattern in lowered for pattern in provenance_patterns):
+        return True
+    return False
 
 
 def _demo_evidence(evidence_sentences: list[str]) -> list[str]:

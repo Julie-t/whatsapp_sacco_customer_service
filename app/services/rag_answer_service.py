@@ -15,7 +15,7 @@ from typing import Optional
 from app.ai.llm import LLM
 from app.ai.providers.groq import GroqRateLimitError
 from app.ai.rag.answerability import AnswerabilityChecker
-from app.ai.rag.context import build_context
+from app.ai.rag.context import build_context, select_context
 from app.ai.rag.models import RAGResult
 from app.ai.rag.pipeline import RAGPipeline
 from app.ai.rag.prompts import grounded_answer_messages
@@ -127,8 +127,10 @@ class RAGAnswerService:
         retrieval_latency = perf_counter() - retrieval_started
         logger.info("RAG retrieval latency: %.3fs | results=%d", retrieval_latency, len(results))
 
+        selected_results = select_context(reformulated_query, results)
+
         # Step 3: Answerability check
-        decision = self.answerability_checker.check(query, results)
+        decision = self.answerability_checker.check(reformulated_query, selected_results)
         logger.info(
             "Answerability check: %s (confidence: %.2f)",
             decision.answerable,
@@ -136,7 +138,8 @@ class RAGAnswerService:
         )
 
         # Extract retrieval confidence
-        retrieval_confidence = min([r.score for r in results]) if results else 0.0
+        # Preserve the response contract: confidence describes the full selected context.
+        retrieval_confidence = min([r.score for r in selected_results]) if selected_results else 0.0
 
         # Step 4: Decide what to do
         if not results:
@@ -204,7 +207,7 @@ class RAGAnswerService:
             )
 
         # Step 5: Generate answer
-        context = build_context(results)
+        context = build_context(selected_results)
         generation_started = perf_counter()
         try:
             answer = await self.llm.generate(grounded_answer_messages(query, context))
@@ -238,7 +241,7 @@ class RAGAnswerService:
                 source=result.source,
                 score=result.score,
             )
-            for result in results
+            for result in selected_results
         ]
 
         logger.info(
@@ -258,6 +261,30 @@ class RAGAnswerService:
             answerability_confidence=decision.confidence,
             fallback_category=None,
         )
+
+    async def retrieve_evidence(
+        self,
+        query: str,
+        sacco_id: str | None = None,
+        language: str | None = None,
+        conversation_history: list[dict] | None = None,
+        top_k: int | None = None,
+    ) -> tuple[str, list[RAGResult]]:
+        """Return the same reformulated query and evidence used by ``answer``."""
+        reformulated_query = query
+        if conversation_history:
+            turns = [
+                ConversationTurn(role=turn.get("role", "user"), content=turn.get("content", ""))
+                for turn in conversation_history
+            ]
+            reformulated_query = await self.query_rewriter.rewrite(query, turns)
+        results = self.pipeline.search(
+            query=reformulated_query,
+            sacco_id=sacco_id,
+            language=language,
+            top_k=top_k,
+        )
+        return reformulated_query, results
 
     async def _record_knowledge_gap(
         self,

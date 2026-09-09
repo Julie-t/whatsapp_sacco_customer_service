@@ -162,6 +162,28 @@ def test_deterministic_route_sensitive_cases(question, member_data, human):
     assert result.likely_needs_human is human
 
 
+@pytest.mark.parametrize(
+    ("question", "expected"),
+    [
+        ("I want to make a withdrawal immediately.", "human_escalation"),
+        ("Tell me about loans", "clarification"),
+        ("What percentage of my money should go to emergency savings?", "guardrail"),
+        ("How do I check my account balance?", "human_escalation"),
+        ("Akaunti yangu imefungwa kwa nini?", "human_escalation"),
+        ("How do I calculate my loan repayment?", None),
+    ],
+)
+def test_deterministic_route_evaluation_failures(question, expected):
+    triage = deterministic_route(question)
+    assert _routed_behavior_for_test(triage, question) == expected
+
+
+def _routed_behavior_for_test(triage, question):
+    from evaluations.runner import _routed_behavior
+
+    return _routed_behavior(triage, question)
+
+
 def test_report_excludes_routed_fallbacks_from_answerability():
     routed = EvaluationResult(
         case_id="route",
@@ -212,3 +234,64 @@ def test_report_includes_retrieval_debug_fields():
     )
 
     assert "error_analysis" in report["retrieval"]
+
+
+# ---------------------------------------------------------------------------
+# Grounding verifier: non-factual claim exemptions & paraphrase tolerance
+# ---------------------------------------------------------------------------
+
+class TestGroundingNonFactualExemptions:
+    """Verify that introductory framing, safe disclaimers, and meta-commentary
+    are exempt from grounding checks to avoid false-positive hallucination flags."""
+
+    def _verify(self, answer, evidence, expected_claims=None):
+        from evaluations.grounding import GroundingVerifier
+        return GroundingVerifier().verify(answer, evidence, expected_claims)
+
+    def test_introductory_framing_exempt(self):
+        evidence = "A sample loan application may require an identification document, recent income evidence, a completed application form, and details of proposed guarantors."
+        answer = "For a loan application you'll typically need: an identification document, recent income evidence, a completed application form, and details of proposed guarantors."
+        result = self._verify(answer, evidence)
+        assert result.supported, f"Introductory framing should be exempt, but got unsupported: {result.unsupported_claims}"
+
+    def test_safe_disclaimer_exempt(self):
+        evidence = "Illustrative daily transaction limit is KES 50,000 for digital channels."
+        answer = "The daily limit is KES 50,000. Please check with your SACCO staff for the actual limit that applies to your account."
+        result = self._verify(answer, evidence)
+        # The disclaimer sentence should not cause a failure
+        assert "Please check with your SACCO staff" not in result.unsupported_claims
+
+    def test_meta_commentary_exempt(self):
+        evidence = "Illustrative SACCO loan products include development loans for productive projects."
+        answer = "A development loan is a type of SACCO loan intended to fund productive projects. This description comes from the SACCO's illustrative policy."
+        result = self._verify(answer, evidence)
+        assert "This description comes from the SACCO's illustrative policy." not in result.unsupported_claims
+
+    def test_contact_staff_confirmation_exempt(self):
+        evidence = "A sample loan application may require an identification document."
+        answer = "You need an identification document. If you need confirmation of the exact requirements for your specific loan type, please contact SACCO staff."
+        result = self._verify(answer, evidence)
+        assert "please contact SACCO staff" not in " ".join(result.unsupported_claims).lower()
+
+    def test_paraphrased_content_accepted_at_lower_threshold(self):
+        """Synonym usage should not be flagged: 'earned in earlier periods' vs 'accumulated from previous periods'."""
+        evidence = "Compound interest is interest earned on both principal and accumulated interest from previous periods."
+        answer = "Compound interest is interest calculated on both the original amount and on interest that has already been earned in earlier periods."
+        result = self._verify(answer, evidence)
+        assert result.supported, f"Paraphrased content should be accepted, but got unsupported: {result.unsupported_claims}"
+
+    def test_genuine_hallucination_still_caught(self):
+        """Ensure real unsupported claims are still flagged despite the new exemptions."""
+        evidence = "Loan applicants need an identification document and a completed application form."
+        answer = "Applicants need an identification document and a 5 percent processing fee."
+        result = self._verify(answer, evidence)
+        assert not result.supported
+        assert any("5 percent" in claim.lower() or "fee" in claim.lower() for claim in result.unsupported_claims)
+
+    def test_framing_with_numbers_not_exempt(self):
+        """Framing-like sentences containing numbers should still be grounded."""
+        evidence = "Loan applicants need two guarantors."
+        answer = "You'll typically need 3 guarantors for a loan application."
+        result = self._verify(answer, evidence)
+        # This should NOT be exempt because it contains a number claim
+        assert not result.supported

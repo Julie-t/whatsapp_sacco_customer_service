@@ -34,6 +34,7 @@ def _validate_twilio_request(request: Request, body_bytes: bytes) -> bool:
 @router.post("/webhooks/whatsapp")
 async def whatsapp_webhook(request: Request):
     body_bytes = await request.body()
+    logger.info("Webhook received: %s", body_bytes[:500])
     if not _validate_twilio_request(request, body_bytes):
         logger.warning("Invalid Twilio webhook signature")
         return Response(content="", status_code=403)
@@ -45,6 +46,8 @@ async def whatsapp_webhook(request: Request):
     profile_name = form.get("ProfileName", "")
     num_media = form.get("NumMedia", "0")
 
+    logger.info("Processing message from=%s body=%r", from_number, body)
+
     incoming = IncomingWhatsAppMessage(
         from_number=from_number,
         to_number=to_number,
@@ -55,4 +58,5 @@ async def whatsapp_webhook(request: Request):
 
     response_body = await handle_message_async(incoming)
     twiml = _whatsapp_service.build_twiml_response(response_body)
+    logger.info("Webhook response: %s", twiml[:500])
     return Response(content=twiml, media_type="application/xml")

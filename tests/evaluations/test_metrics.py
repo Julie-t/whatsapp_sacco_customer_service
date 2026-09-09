@@ -1,3 +1,5 @@
+import pytest
+
 from evaluations.metrics import groundedness, language_correctness, relevance
 from app.ai.rag.answer_verifier import AnswerVerifier
 
@@ -20,6 +22,20 @@ def test_relevance_rejects_off_topic_answer():
     )
 
     assert result.passed is False
+
+
+@pytest.mark.parametrize(
+    ("question", "answer"),
+    [
+        ("What documents do I need for a loan?", "The loan document and application form are required."),
+        ("What is the difference between shares and savings?", "A share represents ownership while saving is a deposit."),
+        ("How do I calculate my monthly loan payment?", "Monthly repayment includes principal and interest."),
+        ("How do I withdraw funds from my account?", "A withdrawal request can be made through an approved account channel."),
+        ("Can I defer my loan payments?", "A deferral may change the repayment schedule."),
+    ],
+)
+def test_relevance_normalizes_domain_terms(question, answer):
+    assert relevance(question, answer).passed is True
 
 
 def test_mixed_language_is_allowed():

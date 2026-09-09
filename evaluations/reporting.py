@@ -141,13 +141,36 @@ def render_case_answers(report: dict[str, object], mode: str, dataset: str) -> s
         sources = ", ".join(
             case.get("retrieval", {}).get("top_retrieved", [])
         ) or "none"
+        answer = _sanitize_for_console(case.get("answer") or "(no answer)")
         lines.extend(
             [
                 f"[{case['case_id']}] {case['question']}",
                 f"Expected: {case['expected_behavior']} | Actual: {case.get('actual_behavior') or 'error'} | Passed: {case['passed']}",
-                f"Answer: {case.get('answer') or '(no answer)'}",
+                f"Answer: {answer}",
                 f"Retrieved: {sources}",
                 "",
             ]
         )
     return "\n".join(lines).rstrip()
+
+
+def _sanitize_for_console(text: str) -> str:
+    """Replace problematic Unicode characters with ASCII equivalents.
+
+    Groq and other LLMs commonly emit narrow no-break spaces, non-breaking
+    hyphens, and smart quotes that Windows cp1252 cannot encode.
+    """
+    replacements = {
+        "\u202f": " ",   # narrow no-break space
+        "\u00a0": " ",   # non-breaking space
+        "\u2011": "-",   # non-breaking hyphen
+        "\u2013": "-",   # en dash
+        "\u2014": "--",  # em dash
+        "\u2018": "'",   # left single quote
+        "\u2019": "'",   # right single quote
+        "\u201c": '"',   # left double quote
+        "\u201d": '"',   # right double quote
+    }
+    for char, replacement in replacements.items():
+        text = text.replace(char, replacement)
+    return text

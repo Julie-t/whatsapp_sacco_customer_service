@@ -258,7 +258,7 @@
       "language": "sw",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "test_membership",
+      "expected_source": "test_membership_sw",
       "expected_fallback": null,
       "expected_claims": [
         "Uanachama wa SACCO ni kuwa mwanachama rasmi wa kundi la akiba na mkopo.",
@@ -273,7 +273,7 @@
       "language": "sw",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "test_compound_interest",
+      "expected_source": "test_compound_interest_sw",
       "expected_fallback": null,
       "expected_claims": [
         "Riba ya jumla ni riba inayopatikana kwa msingi na riba iliyokusanywa.",
@@ -376,7 +376,7 @@
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "test_membership",
+      "expected_source": "test_sacco_regulation",
       "expected_fallback": null,
       "expected_claims": [
         "The SACCO is registered with the appropriate regulatory authority.",
@@ -417,7 +417,7 @@
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "test_loan_rates_terms",
+      "expected_source": "test_loan_approval_process",
       "expected_fallback": null,
       "expected_claims": [
         "Loan applications are submitted to SACCO staff.",
@@ -466,7 +466,7 @@
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "test_membership",
+      "expected_source": "test_sacco_income",
       "expected_fallback": null,
       "expected_claims": [
         "SACCOs earn income from interest on member loans.",
@@ -522,7 +522,7 @@
       "language": "en",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "test_loan_repayment",
+      "expected_source": "test_missed_payments",
       "expected_fallback": null,
       "expected_claims": [
         "Late payments result in penalty interest charges.",
@@ -536,11 +536,15 @@
       "question": "Can I defer my loan payments?",
       "language": "en",
       "sacco_id": "demo_sacco",
-      "expected_behavior": "knowledge_gap",
-      "expected_source": null,
-      "expected_fallback": "knowledge_gap",
-      "expected_claims": [],
-      "notes": "Account operations not covered"
+      "expected_behavior": "answer",
+      "expected_source": "test_loan_deferral",
+      "expected_fallback": null,
+      "expected_claims": [
+        "A loan deferral request may require an application before the due date.",
+        "Eligibility and repayment history can affect approval of a deferral.",
+        "A deferral may change the repayment schedule or applicable charges."
+      ],
+      "notes": "Synthetic deferral policy is now covered"
     },
     {
       "id": "eval_042",
@@ -655,7 +659,7 @@
       "language": "sw",
       "sacco_id": "demo_sacco",
       "expected_behavior": "answer",
-      "expected_source": "test_membership",
+      "expected_source": "test_membership_application_sw",
       "expected_fallback": null,
       "expected_claims": [
         "Unaomba kuwa mwanachama yanaanza kwa kuomba fomu ya uanachama.",

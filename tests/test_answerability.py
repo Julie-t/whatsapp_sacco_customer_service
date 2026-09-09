@@ -91,8 +91,8 @@ def test_specific_query_generic_content_reduced_confidence():
 
     decision = checker.check("What is the withdrawal fee?", results)
 
-    # Should still be answerable but with caution
-    assert "may not contain all specific" in decision.reason.lower()
+    assert decision.answerable is False
+    assert "does not specify" in decision.reason.lower()
 
 
 def test_specific_query_specific_content_high_confidence():
@@ -109,8 +109,8 @@ def test_specific_query_specific_content_high_confidence():
     assert decision.confidence > 0.8
 
 
-def test_multiple_results_uses_minimum_score():
-    """Multiple results should check minimum score."""
+def test_multiple_results_use_strongest_evidence_score():
+    """A weak tail result must not veto a strong answerable result."""
     checker = AnswerabilityChecker(min_retrieval_score=0.5)
     results = [
         make_result(document_id="doc1", score=0.9),
@@ -121,7 +121,7 @@ def test_multiple_results_uses_minimum_score():
     decision = checker.check("What is X?", results)
 
     assert decision.min_score == 0.3
-    assert decision.answerable is False
+    assert decision.answerable is True
 
 
 def test_confidence_scales_with_score():
@@ -172,6 +172,38 @@ def test_queryability_judgment_examples():
     )]
     decision2 = checker.check("What is the withdrawal fee?", results2)
     assert decision2.answerable is False or decision2.confidence < 0.8
+
+
+@pytest.mark.parametrize(
+    ("query", "content"),
+    [
+        (
+            "Can I change my guarantor after loan approval?",
+            "A guarantor may be released after an approved replacement process.",
+        ),
+        (
+            "How can I become a guarantor for another member?",
+            "A guarantor is an eligible member whose qualifying savings may be considered.",
+        ),
+        (
+            "What financial support does the SACCO offer for education?",
+            "School-fees loans are one illustrative loan product for education costs.",
+        ),
+    ],
+)
+def test_related_evidence_without_requested_operation_is_not_answerable(query, content):
+    decision = AnswerabilityChecker().check(query, [make_result(content=content, score=0.9)])
+
+    assert decision.answerable is False
+
+
+def test_repayment_evidence_does_not_answer_payment_deferral():
+    decision = AnswerabilityChecker().check(
+        "Can I defer my loan payments?",
+        [make_result(content="Loan repayment uses scheduled instalments and applicable interest.", score=0.9)],
+    )
+
+    assert decision.answerable is False
 
 
 def test_empty_content_not_answerable():
