@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SACCO AI Admin Intelligence & Operations Dashboard - Monitor member interactions, knowledge gaps, escalations, and AI evaluation metrics.">
+  <title>SACCO AI — Admin Intelligence & Operations Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Login Modal / Screen -->
+  <div id="login-overlay" class="login-overlay">
+    <div class="login-card glass-panel">
+      <div class="login-brand">
+        <div class="brand-badge">🇰🇪 SACCO AI</div>
+        <h2>Staff Portal Login</h2>
+        <p>Enterprise Operations & Member Intelligence</p>
+      </div>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="login-username">Staff Username</label>
+          <input type="text" id="login-username" value="admin" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" value="SaccoAdmin2026!" required autocomplete="current-password">
+        </div>
+        <div id="login-error" class="login-error hidden"></div>
+        <button type="submit" id="btn-login" class="btn-primary full-width">Sign In to Dashboard</button>
+      </form>
+      <div class="login-footer">
+        <span>Default demo staff: <code>admin</code> / <code>SaccoAdmin2026!</code></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Dashboard App Shell -->
+  <div id="app-shell" class="app-shell hidden">
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar glass-panel">
+      <div class="sidebar-header">
+        <div class="sacco-logo">
+          <div class="logo-icon">🌿</div>
+          <div class="logo-text">
+            <span class="brand-title">SACCO AI</span>
+            <span class="tenant-badge" id="sidebar-sacco-id">demo_sacco</span>
+          </div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-tab="overview" id="nav-overview">
+          <span class="nav-icon">📊</span> Overview & KPIs
+        </button>
+        <button class="nav-item" data-tab="gaps" id="nav-gaps">
+          <span class="nav-icon">🧠</span> Knowledge Gaps
+          <span class="badge-pill" id="badge-gaps-count">0</span>
+        </button>
+        <button class="nav-item" data-tab="escalations" id="nav-escalations">
+          <span class="nav-icon">🚨</span> Escalations Queue
+          <span class="badge-pill alert" id="badge-escalations-count">0</span>
+        </button>
+        <button class="nav-item" data-tab="knowledge" id="nav-knowledge">
+          <span class="nav-icon">📚</span> Policy Management
+        </button>
+        <button class="nav-item" data-tab="quality" id="nav-quality">
+          <span class="nav-icon">🎯</span> AI Quality & RAG Trends
+        </button>
+        <button class="nav-item" data-tab="health" id="nav-health">
+          <span class="nav-icon">⚡</span> System Health
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="avatar" id="user-avatar">A</div>
+          <div class="user-details">
+            <span class="user-name" id="user-name">Staff Admin</span>
+            <span class="user-role" id="user-role">Administrator</span>
+          </div>
+        </div>
+        <button id="btn-logout" class="btn-ghost btn-sm" title="Sign Out">Logout</button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- Top App Header -->
+      <header class="top-header glass-panel">
+        <div class="header-left">
+          <h1 id="page-title">Executive Operations Overview</h1>
+          <p class="subtitle" id="page-subtitle">Real-time member interactions, financial goal trends & automated intelligence</p>
+        </div>
+        <div class="header-right">
+          <div class="system-status-indicator">
+            <span class="status-dot"></span>
+            <span id="header-system-status">Operational</span>
+          </div>
+          <button id="btn-export-csv" class="btn-secondary">📥 Export CSV Report</button>
+        </div>
+      </header>
+
+      <!-- TAB 1: OVERVIEW -->
+      <section id="tab-overview" class="tab-pane active">
+        <!-- KPI Cards Grid -->
+        <div class="kpi-grid">
+          <div class="kpi-card glass-card">
+            <div class="kpi-icon blue">👥</div>
+            <div class="kpi-data">
+              <span class="kpi-label">Registered Members</span>
+              <span class="kpi-value" id="kpi-members">-</span>
+              <span class="kpi-subtext">Active in demo SACCO</span>
+            </div>
+          </div>
+          <div class="kpi-card glass-card">
+            <div class="kpi-icon green">💬</div>
+            <div class="kpi-data">
+              <span class="kpi-label">Questions Handled</span>
+              <span class="kpi-value" id="kpi-questions">-</span>
+              <span class="kpi-subtext">WhatsApp member turns</span>
+            </div>
+          </div>
+          <div class="kpi-card glass-card">
+            <div class="kpi-icon orange">⚠️</div>
+            <div class="kpi-data">
+              <span class="kpi-label">Knowledge Gaps</span>
+              <span class="kpi-value" id="kpi-gaps">-</span>
+              <span class="kpi-subtext">Requires policy review</span>
+            </div>
+          </div>
+          <div class="kpi-card glass-card">
+            <div class="kpi-icon red">🚨</div>
+            <div class="kpi-data">
+              <span class="kpi-label">Open Escalations</span>
+              <span class="kpi-value" id="kpi-escalations">-</span>
+              <span class="kpi-subtext">Pending staff attention</span>
+            </div>
+          </div>
+          <div class="kpi-card glass-card">
+            <div class="kpi-icon purple">⭐</div>
+            <div class="kpi-data">
+              <span class="kpi-label">Member CSAT</span>
+              <span class="kpi-value" id="kpi-csat">-</span>
+              <span class="kpi-subtext">Helpful feedback rate</span>
+            </div>
+          </div>
+          <div class="kpi-card glass-card">
+            <div class="kpi-icon teal">🛡️</div>
+            <div class="kpi-data">
+              <span class="kpi-label">Groundedness Score</span>
+              <span class="kpi-value" id="kpi-groundedness">100%</span>
+              <span class="kpi-subtext">0% Hallucination baseline</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Two Column Content -->
+        <div class="columns-grid">
+          <!-- Common Member Inquiries -->
+          <div class="panel glass-card">
+            <div class="panel-header">
+              <h3>Top Member Questions & Topics</h3>
+              <span class="panel-badge">Live Triage</span>
+            </div>
+            <div class="table-container">
+              <table class="data-table" id="table-faq">
+                <thead>
+                  <tr>
+                    <th>Topic / Category</th>
+                    <th>Count</th>
+                    <th>Share</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-faq">
+                  <tr><td colspan="3" class="loading">Loading inquiry topics...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Goal Insights & Language Breakdown -->
+          <div class="panel glass-card">
+            <div class="panel-header">
+              <h3>Member Goal & Demographic Trends</h3>
+              <span class="panel-badge">Anonymized</span>
+            </div>
+            <div class="table-container">
+              <table class="data-table" id="table-goals">
+                <thead>
+                  <tr>
+                    <th>Goal Category</th>
+                    <th>Members</th>
+                    <th>Average Target</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-goals">
+                  <tr><td colspan="3" class="loading">Loading goal insights...</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="language-bar-section">
+              <h4>Member Language Split</h4>
+              <div class="progress-bar-container">
+                <div class="progress-segment en" id="lang-bar-en" style="width: 50%" title="English"></div>
+                <div class="progress-segment sw" id="lang-bar-sw" style="width: 30%" title="Swahili"></div>
+                <div class="progress-segment mixed" id="lang-bar-mixed" style="width: 20%" title="Mixed / Sheng"></div>
+              </div>
+              <div class="legend" id="lang-legend">
+                <span><i class="dot en"></i> English <b id="lang-pct-en">0%</b></span>
+                <span><i class="dot sw"></i> Swahili <b id="lang-pct-sw">0%</b></span>
+                <span><i class="dot mixed"></i> Mixed / Sheng <b id="lang-pct-mixed">0%</b></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: KNOWLEDGE GAPS -->
+      <section id="tab-gaps" class="tab-pane">
+        <div class="panel glass-card">
+          <div class="panel-header">
+            <div>
+              <h3>Detected SACCO Knowledge Gaps</h3>
+              <p class="panel-desc">Questions where the RAG pipeline found insufficient context, protecting the SACCO from hallucinations.</p>
+            </div>
+            <button class="btn-primary btn-sm" id="btn-create-gap-policy">+ Draft New Policy Document</button>
+          </div>
+          <div class="table-container">
+            <table class="data-table" id="table-knowledge-gaps">
+              <thead>
+                <tr>
+                  <th>Target SACCO</th>
+                  <th>Member Query</th>
+                  <th>Language</th>
+                  <th>Retrieval Confidence</th>
+                  <th>Recorded At</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-knowledge-gaps">
+                <tr><td colspan="6" class="loading">Loading knowledge gaps...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: ESCALATIONS QUEUE -->
+      <section id="tab-escalations" class="tab-pane">
+        <div class="panel glass-card">
+          <div class="panel-header">
+            <div>
+              <h3>Staff Escalations & Dispute Queue</h3>
+              <p class="panel-desc">Member inquiries automatically routed to human staff (transaction disputes, fraud, or complex inquiries).</p>
+            </div>
+            <div class="filter-controls">
+              <select id="filter-escalation-status" class="select-input">
+                <option value="">All Statuses</option>
+                <option value="open" selected>Open Only</option>
+                <option value="in_progress">In Progress</option>
+                <option value="resolved">Resolved</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="data-table" id="table-escalations">
+              <thead>
+                <tr>
+                  <th>Ticket ID</th>
+                  <th>Member / Phone</th>
+                  <th>Inquiry Details</th>
+                  <th>Category</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-escalations">
+                <tr><td colspan="8" class="loading">Loading escalations queue...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: KNOWLEDGE BASE POLICY MANAGEMENT -->
+      <section id="tab-knowledge" class="tab-pane">
+        <div class="panel glass-card">
+          <div class="panel-header">
+            <div>
+              <h3>Approved Knowledge Base & Drafts</h3>
+              <p class="panel-desc">Control which documents are approved and indexed into the live Qdrant vector memory.</p>
+            </div>
+            <button class="btn-primary" id="btn-open-doc-modal">+ Add SACCO Policy</button>
+          </div>
+          <div class="table-container">
+            <table class="data-table" id="table-docs">
+              <thead>
+                <tr>
+                  <th>Document ID</th>
+                  <th>Policy Title</th>
+                  <th>Category</th>
+                  <th>Version</th>
+                  <th>Status</th>
+                  <th>Vector Indexed</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-docs">
+                <tr><td colspan="7" class="loading">Loading policy documents...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: AI QUALITY & RAG TRENDS -->
+      <section id="tab-quality" class="tab-pane">
+        <div class="panel glass-card">
+          <div class="panel-header">
+            <div>
+              <h3>AI Evaluation Iterations & Quality Trends</h3>
+              <p class="panel-desc">Verified progression of retrieval recall, answerability accuracy, and zero-hallucination guardrails.</p>
+            </div>
+            <span class="panel-badge success">Evaluation Baseline: PASS</span>
+          </div>
+
+          <!-- Evaluation Historical Table -->
+          <div class="table-container">
+            <table class="data-table" id="table-eval-history">
+              <thead>
+                <tr>
+                  <th>Run ID</th>
+                  <th>Timestamp</th>
+                  <th>Test Cases</th>
+                  <th>Recall@1</th>
+                  <th>Recall@3</th>
+                  <th>Recall@5</th>
+                  <th>Answerability</th>
+                  <th>Groundedness</th>
+                  <th>Hallucinations</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-eval-history">
+                <tr><td colspan="9" class="loading">Loading evaluation benchmarks...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6: SYSTEM HEALTH -->
+      <section id="tab-health" class="tab-pane">
+        <div class="panel glass-card">
+          <div class="panel-header">
+            <div>
+              <h3>System Infrastructure & Cluster Health</h3>
+              <p class="panel-desc">Real-time status of persistent PostgreSQL, Qdrant vector memory, and Groq LLM inference.</p>
+            </div>
+            <button class="btn-secondary btn-sm" id="btn-refresh-health">🔄 Re-check Health</button>
+          </div>
+
+          <div class="health-grid">
+            <div class="health-card glass-panel" id="health-db">
+              <div class="health-icon">🐘</div>
+              <div class="health-info">
+                <h4>PostgreSQL 18 Service</h4>
+                <p>Relational store, conversations & member identity</p>
+                <span class="health-badge healthy" id="status-db">Connected</span>
+              </div>
+            </div>
+            <div class="health-card glass-panel" id="health-qdrant">
+              <div class="health-icon">🧭</div>
+              <div class="health-info">
+                <h4>Qdrant Vector Cluster</h4>
+                <p>Vector embeddings, similarity search & policy chunks</p>
+                <span class="health-badge healthy" id="status-qdrant">Connected</span>
+              </div>
+            </div>
+            <div class="health-card glass-panel" id="health-groq">
+              <div class="health-icon">⚡</div>
+              <div class="health-info">
+                <h4>Groq AI Inference API</h4>
+                <p>High-speed LLM answer generation & intent routing</p>
+                <span class="health-badge healthy" id="status-groq">Operational</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Modal for Creating/Editing Policy Document -->
+  <div id="modal-doc" class="modal-backdrop hidden">
+    <div class="modal-dialog glass-panel">
+      <div class="modal-header">
+        <h3 id="modal-doc-title">Draft New SACCO Policy</h3>
+        <button class="btn-close" id="btn-close-modal">&times;</button>
+      </div>
+      <form id="form-doc">
+        <div class="form-group">
+          <label for="doc-title">Document Title</label>
+          <input type="text" id="doc-title" placeholder="e.g. Loan Processing Fees & Disbursement Policy" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="doc-category">Category</label>
+            <select id="doc-category" class="select-input">
+              <option value="loans">Loans & Credit</option>
+              <option value="savings">Savings & Deposits</option>
+              <option value="membership">Membership & Shares</option>
+              <option value="general" selected>General SACCO Operations</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="doc-effective-date">Effective Date</label>
+            <input type="date" id="doc-effective-date">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="doc-content">Policy Content (Grounded SACCO Facts)</label>
+          <textarea id="doc-content" rows="8" placeholder="Enter clear, approved policy terms, requirements, and figures that the AI can cite..." required></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-ghost" id="btn-cancel-modal">Cancel</button>
+          <button type="submit" class="btn-primary" id="btn-save-doc">Save Draft Document</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Resolving Escalations -->
+  <div id="modal-esc" class="modal-backdrop hidden">
+    <div class="modal-dialog glass-panel">
+      <div class="modal-header">
+        <h3>Update Escalation Ticket #<span id="modal-esc-id">-</span></h3>
+        <button class="btn-close" id="btn-close-esc-modal">&times;</button>
+      </div>
+      <form id="form-esc">
+        <div class="form-group">
+          <label>Member Inquiry</label>
+          <div id="modal-esc-query" class="readonly-box"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="modal-esc-status">Ticket Status</label>
+            <select id="modal-esc-status" class="select-input">
+              <option value="open">Open</option>
+              <option value="in_progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+              <option value="dismissed">Dismissed</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="modal-esc-priority">Priority</label>
+            <select id="modal-esc-priority" class="select-input">
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="modal-esc-notes">Resolution Notes</label>
+          <textarea id="modal-esc-notes" rows="4" placeholder="Document staff actions taken, call outcome, or member resolution..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-ghost" id="btn-cancel-esc-modal">Cancel</button>
+          <button type="submit" class="btn-primary">Update Ticket</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

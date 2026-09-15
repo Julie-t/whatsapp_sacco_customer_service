@@ -32,6 +32,7 @@ class RAGPipeline:
         else:
             provider = embedding_provider or _default_embedding_provider()
             store = vector_store or QdrantVectorStore()
+            store.bootstrap_if_empty()
             self.retriever = Retriever(provider, store)
 
     def search(

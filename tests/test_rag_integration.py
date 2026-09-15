@@ -6,9 +6,9 @@ from app.ai.rag.answerability import AnswerabilityChecker
 from app.ai.rag.models import RAGResult
 from app.ai.rag.query_rewriter import QueryRewriter
 from app.schemas.message import ConversationTurn
-from app.services.knowledge_gap_repository import InMemoryKnowledgeGapRepository
-from app.services.knowledge_gap_service import KnowledgeGapService
-from app.services.rag_answer_service import RAGAnswerService
+from app.services.rag.knowledge_gap_repository import InMemoryKnowledgeGapRepository
+from app.services.rag.knowledge_gap_service import KnowledgeGapService
+from app.services.rag.rag_answer_service import RAGAnswerService
 
 
 class FakePipeline:

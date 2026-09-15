@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from app.ai.llm import LLM
 from app.ai.rag.pipeline import RAGPipeline
 from app.schemas.rag_answer import RAGAnswerRequest, RAGAnswerResponse
-from app.services.rag_answer_service import RAGAnswerService
+from app.services.rag.rag_answer_service import RAGAnswerService
 from app.schemas.rag import RAGSearchRequest, RAGSearchResponse
 
 logger = logging.getLogger(__name__)

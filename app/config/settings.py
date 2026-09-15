@@ -61,5 +61,16 @@ class Settings(BaseSettings):
     # Kept as configuration so the engine is never hardcoded to one SACCO.
     DEFAULT_SACCO_ID: str = "demo_sacco"
 
+    # Member data demo mode — when True, responses from the member-data
+    # service include a "(demo data)" label for transparency during testing.
+    MEMBER_DATA_DEMO_MODE: bool = True
+
+    # System 12: Production Authentication and Core SACCO Integration
+    REQUIRE_MEMBER_AUTH: bool = False
+    MEMBER_SESSION_TTL_MINUTES: int = 15
+    SACCO_API_URL: str = ""
+    SACCO_API_KEY: str = ""
+    SACCO_API_TIMEOUT_SECONDS: float = 3.0
+
 
 settings = Settings()

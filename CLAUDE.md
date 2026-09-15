@@ -2,8 +2,8 @@
 
 > **Authoritative Project Continuity Brief & Master Execution Tracker**  
 > **Target AI Assistants**: Claude Code, Antigravity / Gemini, GitHub Copilot, Cursor  
-> **Current Status**: **System 6 PASSED** (Baseline Established: 156 tests passing, 100% offline eval pass)  
-> **Immediate Focus**: **System 7 — Member Identity / Profile + Secure Member-Data Routing**
+> **Current Status**: **System 11 PASSED** (308 unit/integration tests passing, 100% offline eval across 84 cases, 0 hallucinations, SACCO Admin Intelligence & Operations Dashboard live at `/dashboard`)  
+> **Immediate Focus**: **Production Staging, Real Policy Ingestion & Voice/Multimodal Expansion**
 
 ---
 
@@ -305,7 +305,7 @@ python scripts/report_knowledge_gaps.py --sacco-id demo_sacco
 # Ingest synthetic SACCO knowledge base into Qdrant
 python scripts/ingest_documents.py
 
-# Run all 156 unit and integration tests
+# Run all 294 unit and integration tests
 python -m pytest -v
 ```
 
@@ -321,49 +321,74 @@ python scripts/evaluate_rag.py --live --show-answers
 python scripts/compare_evaluations.py --baseline
 ```
 
----
+## 9. System Milestone Summaries & Future Blueprints
+ 
+### 9.1 System 7 Summary: Member Identity & Secure Personal Data Routing (PASSED)
+* **Database Migration**: `migrations/002_member_identity.sql` provisioned `members`, `member_accounts`, and `member_loans` tables, with `member_id` foreign key association on `conversations`.
+* **Phone Number Privacy & Hashing**: All lookup operations index on deterministic `SHA-256` phone hashes. No plain-text phone numbers are stored in member identity records.
+* **Repository Pattern**: `MemberRepository` (PostgreSQL) and `InMemoryMemberRepository` (test mock) cleanly separate database dependencies.
+* **Deterministic Fast-Path Routing**: Personal queries (`account summary`, `balance`, `loans`) bypass the LLM and RAG pipelines entirely, returning formatted templates in < 1 second with 0% hallucination risk.
+* **Response Hygiene**: Plain-text formatting with Kenyan currency conventions (`KSh`), zero markdown bold/italic formatting, zero em dashes, and clear `(demo data)` transparency indicators.
+* **Live WhatsApp Verification**: Verified end-to-end via Twilio and Cloudflare tunnel with real WhatsApp user phone numbers.
+* **Evaluation Upgrade**: Upgraded `data/evaluation/rag_eval.json` to 64 cases (10 member-data cases), achieving 100% routing and fallback accuracy with 0 errors or hallucinations.
 
-## 9. Next Steps: System 7 Implementation Blueprint
+### 9.2 System 8 Summary: Financial Goals & Goal-Aware Planning (PASSED)
+* **Database Migration & Schema**: `migrations/003_financial_goals.sql` provisioned `financial_goals` table with constraints (`goal_type`, `status`, positive target/current amounts, future target dates).
+* **Deterministic Financial Calculator**: `app/services/goal_calculator.py` executes all mathematical planning (< 1ms, zero LLM arithmetic), computing progress percentages, required monthly contributions, completion dates, and scenario what-if adjustments.
+* **Repository & Dual Data Layer**: `GoalRepository` (PostgreSQL asyncpg) and `InMemoryGoalRepository` (unit testing) with seeded demo goals across all 3 demo members.
+* **Goal Service & Natural Language Extractor**: `GoalService` validates parameters, flags missing fields for clarification, and runs scenario comparisons. `GoalExtractor` parses target amounts, timelines, and goal categories from conversational text.
+* **Strict WhatsApp Response Formatting**: `app/services/goal_response_formatter.py` ensures clean WhatsApp responses (zero markdown asterisks, zero em dashes, formatted Kenyan currency `KSh`, and explicit `(demo data)` suffixes).
+* **Precedence Routing**: Conversational triage prioritizes `is_goal_related` queries before generic `needs_member_data`, preventing goal inquiries from failing on account lookups.
+* **REST API Endpoints**: `/goals`, `/goals/{id}`, `/goals/{id}/progress`, `/goals/{id}/scenario`, and `/goals/calculate` registered under FastAPI.
+* **Evaluation & Zero-Regression**: Upgraded evaluation suite to 74 cases (10 goal-aware cases including guardrail safety on crypto investment), scoring 100% accuracy, 0 hallucinations, and 251/251 passing unit/integration tests.
 
-> **Goal**: Implement Member Identity, Member Profile Persistence, and Secure Member-Data Routing.  
-> **Key Rule**: Implement incrementally using existing PostgreSQL and the `needs_member_data` triage flag. Do not attempt System 8 or 9 yet.
+### 9.3 System 9 Summary: Personalized Financial Education & Goal-Aware Coaching (PASSED)
+* **Core Rule Strictly Preserved**: Personalization changes the relevance and explanation of information; it does **not** change underlying financial facts or invent SACCO policies.
+* **Database Migration & Audit**: `migrations/004_personalization_history.sql` provisioned `member_education_history` table indexing member inquiries, topics, delivery channels, and timestamps.
+* **Personalization Context Builder**: `app/services/personalization_context_builder.py` unifies member profile (tenure, tier, knowledge level), active financial goals, deterministic progress metrics, and recent education topics.
+* **Adaptive Prompting by Knowledge Level**: `PERSONALIZED_EDUCATION_SYSTEM_PROMPT` adapts explanations dynamically:
+  - `beginner`: everyday analogies, zero financial jargon without definition, short sentences.
+  - `intermediate`: practical mechanics, trade-offs, SACCO product references.
+  - `advanced`: comparative metrics, dividend yields, strategic capital allocation.
+* **Factuality & Non-Directive Safety Guardrails**: Non-directive investment bounds reject stock picks, individual equities, or crypto with educational disclaimers. Unsupported inquiries route to knowledge-gap fallback without hallucinating policies.
+* **Dual Integration**: General educational queries flowing through WhatsApp are personalized on the fly (`handle_message_async`), and dedicated REST endpoints (`/education/explain`, `/education/history/{id}`, `/education/plan/{id}`) provide structured coaching APIs.
+* **Evaluation & Zero-Regression**: Upgraded evaluation suite to 84 cases (10 personalized education/guardrail/gap cases), scoring **100% accuracy (84/84)**, 0 hallucinations, and **268/268 passing unit/integration tests**.
 
-### Phase 7.1 — Demo Member Identity Model
-Create a safe demo member entity (not claiming production biometric/SSO authentication):
-* `member_id` (e.g., `MEM-001`)
-* `identifier / phone_reference` (e.g., WhatsApp phone number hash or normalized format)
-* `name` (e.g., "Jane Wanjiku")
-* `language_preference` (`en`, `sw`, `mixed`)
-* `communication_preference` (`whatsapp`, `sms`)
-* `knowledge_level` (`beginner`, `intermediate`, `advanced`)
-* `created_at` / `updated_at`
+### 9.4 System 10 Summary: Proactive SACCO Intelligence, Alerts & Continuous Member Engagement (PASSED)
+* **Controlled Autonomy Architecture**: System 10 transforms the assistant into a proactive companion without open-ended generative risk. Content is strictly filtered through member preferences, SACCO approval, and factual grounding.
+* **Database Migration & Schemas**: `migrations/005_proactive_engagement.sql` provisioned `member_engagement_preferences`, `financial_news_articles`, and `proactive_notifications`.
+* **Proactive Education Planner**: `app/services/proactive_education_planner.py` evaluates member knowledge level, active goals, and recent topics to select the next progressive lesson (with interactive "Reply MORE" prompts).
+* **Deterministic Goal Alerts**: `app/services/goal_alert_service.py` evaluates milestones (25%, 50%, 75%, 100%) and trajectory risk alerts using `GoalCalculator` (<1ms, zero LLM arithmetic) with zero directive financial recommendations.
+* **Trusted Financial News**: `app/services/news_service.py` filters unexpired, verified news articles, matches them to member goals (e.g. retirement goal -> pension policy updates), and generates concise, source-grounded WhatsApp summaries.
+* **Delivery & Policy Controller**: `app/services/proactive_delivery_service.py` strictly enforces Quiet Hours (default 20:00 to 08:00 East Africa Time), 30-day content deduplication, and paused frequency preferences prior to dispatch.
+* **Two-Way Member Feedback & Expansion**: `app/services/member_feedback_service.py` captures incoming ratings ("HELPFUL" / "NOT HELPFUL") and elaborates dynamically on prior topics when the member replies "MORE" or "ENDELEA".
+* **SACCO Management Intelligence**: `app/services/knowledge_gap_intelligence_service.py` aggregates stored unanswered member queries into actionable executive summaries (e.g. loan fee confusion hotspots).
+* **Comprehensive Verification**: 294 / 294 passing unit/integration tests (0 failures), and 100% offline evaluation accuracy (84/84 cases, 0 hallucinations, `SYSTEM 6 VERDICT: PASS`).
 
-### Phase 7.2 — Member Profile Persistence
-* Use existing PostgreSQL database.
-* Add migration script in `migrations/` for `member_profiles`.
-* Implement repository pattern with isolated tests (in-memory for unit tests, Postgres for integration).
+### 9.5 System 11 Summary: SACCO Admin Intelligence & Operations Dashboard (PASSED)
+* **Two-Sided Platform Architecture**: Completed the transition into an enterprise dual-sided solution: the member-facing WhatsApp companion is backed by an authoritative, multi-tenant SACCO operations dashboard.
+* **Database Migration & Schemas**: `migrations/006_admin_dashboard.sql` provisioned `admin_users`, `escalations`, `knowledge_documents` (versioned approval state machine), and `admin_audit_logs`.
+* **Multi-Tenant Staff Authentication**: Implemented PBKDF2-HMAC-SHA256 password hashing and signed bearer token authentication with strict `sacco_id` data isolation across all administrative queries.
+* **Automated Escalation Pipeline**: `conversation_service.py` automatically records open escalation tickets with priority tags whenever WhatsApp member triage detects human assistance needs or transaction disputes.
+* **Knowledge Approval & Qdrant Sync**: Staff can draft policy updates, review them, and approve them with one click. Upon approval, documents are automatically chunked, embedded, and synchronized into Qdrant vector memory.
+* **Analytics & Intelligence Endpoints**: REST APIs for overview KPIs, frequently asked inquiry topics, anonymized financial goal insights, language distributions, and historical RAG evaluation trend charts.
+* **Modern Web Dashboard**: Glassmorphic SPA served directly at `/dashboard` featuring dark-mode aesthetics, KPI cards, interactive ticket management, and CSV export.
+* **Comprehensive Verification**: **308 / 308 passing tests** (14 new System 11 unit/integration tests, zero regressions).
 
-### Phase 7.3 — Member-Data Service Boundary
-Create `MemberDataService` abstraction with initial synthetic/demo data provider:
-* `get_member_profile(member_id_or_phone)`
-* `get_account_summary(member_id)` (shares, deposits, savings balance)
-* `get_loan_summary(member_id)` (active loan, outstanding balance, next due date)
+### 9.6 Next Steps: Production Staging, Real Policy Ingestion & Voice/Multimodal Expansion
+> **Goal**: Position the hardened 11-system MVP for pilot deployment with partner SACCOs, expanding input modalities and operational tooling.
+* **12.1 Voice Messaging & Speech-to-Text**: WhatsApp voice note handling via Whisper API for low-literacy members.
+* **12.2 Document / Receipt OCR**: Ingesting and verifying M-Pesa transaction statements or payment slips sent via WhatsApp images/PDFs.
+* **12.3 Real SACCO Policy Ingestion**: Replace synthetic knowledge with authenticated SACCO bylaws, loan policy manuals, and dividend schedules.
+* **12.4 Core Banking API Connectors**: Move from seeded demo database to live sandbox connectors (e.g., Core Banking Webhooks / ISO 8583).
 
-### Phase 7.4 — Request Router Integration
-* When `needs_member_data = True` is returned by triage:
-* Bypass generic RAG pipeline.
-* Invoke `MemberDataService` to resolve identity from incoming WhatsApp phone number.
-
-### Phase 7.5 — Fast-Path Deterministic Responses
-* For simple lookups (balance, due date), format structured template responses directly.
-* Return directly to WhatsApp without invoking an LLM generation step.
-
----
-
-## 10. Open Loops & Real-Environment Checklist
-
-* [ ] **PostgreSQL Authentication Verification**: Complete and verify persistent PostgreSQL password setup across service restarts on `postgresql-x64-18`.
-* [ ] **Live Twilio / Cloudflare Verification**: Perform a live WhatsApp round-trip message test verifying end-to-end webhook delivery and TwiML response receipt.
-* [ ] **Retrieval Top-1 Optimization**: Explore BM25 hybrid ranking or contextual reranking to improve Recall@1 (currently 68.18%) while strictly preserving Recall@3 and Recall@5 at 100%.
-* [ ] **Evaluation Excel Tracker**: Generate `evaluations/rag_evaluation_tracker.xlsx` to provide a visual spreadsheet and charts tracking evaluation runs over time.
-* [ ] **Real SACCO Knowledge Ingestion**: Replace synthetic test data with official, approved SACCO policy documents (including document owners, effective dates, and versioning).
+ 
+ ---
+ 
+ ## 10. Open Loops & Real-Environment Checklist
+ 
+ * [ ] **PostgreSQL Authentication Verification**: Complete and verify persistent PostgreSQL password setup across service restarts on `postgresql-x64-18`.
+ * [x] **Live Twilio / Cloudflare Verification**: Live WhatsApp round-trip message test verifying end-to-end webhook delivery, member identity resolution, and TwiML response receipt successfully verified on 2026-09-09.
+ * [ ] **Retrieval Top-1 Optimization**: Explore BM25 hybrid ranking or contextual reranking to improve Recall@1 (currently 68.18%) while strictly preserving Recall@3 and Recall@5 at 100%.
+ * [ ] **Evaluation Excel Tracker**: Generate `evaluations/rag_evaluation_tracker.xlsx` to provide a visual spreadsheet and charts tracking evaluation runs over time.
+ * [ ] **Real SACCO Knowledge Ingestion**: Replace synthetic test data with official, approved SACCO policy documents (including document owners, effective dates, and versioning).

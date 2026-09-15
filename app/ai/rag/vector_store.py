@@ -79,8 +79,18 @@ class QdrantVectorStore:
             from qdrant_client import QdrantClient
 
             if self.url:
-                logger.info("Connecting to Qdrant at %s", self.url)
-                self._client = QdrantClient(url=self.url, api_key=self.api_key or None)
+                try:
+                    logger.info("Connecting to Qdrant at %s", self.url)
+                    remote_client = QdrantClient(url=self.url, api_key=self.api_key or None)
+                    remote_client.get_collections()
+                    self._client = remote_client
+                except Exception as conn_err:
+                    logger.warning(
+                        "Failed to connect to remote Qdrant at %s (%s). Falling back to in-memory Qdrant.",
+                        self.url,
+                        conn_err,
+                    )
+                    self._client = QdrantClient(location=":memory:")
             else:
                 logger.info("Using in-memory Qdrant instance")
                 self._client = QdrantClient(location=":memory:")
@@ -127,6 +137,33 @@ class QdrantVectorStore:
             ),
         )
         logger.info("Created collection %s (dim=%s)", self.collection_name, size)
+
+    def bootstrap_if_empty(self) -> bool:
+        """Seed default SACCO knowledge into the collection if empty and using default collection."""
+        if self.collection_name != settings.QDRANT_COLLECTION:
+            return False
+        try:
+            from pathlib import Path
+            data_path = Path("data/processed/rag_test_data.json")
+            if not data_path.exists():
+                return False
+
+            if self.client.collection_exists(self.collection_name):
+                info = self.client.get_collection(self.collection_name)
+                if info.points_count and info.points_count > 0:
+                    return False
+
+            from app.ai.rag.embeddings import SentenceTransformerEmbeddingProvider
+            from app.ai.rag.ingestion import DocumentIngestor
+            provider = SentenceTransformerEmbeddingProvider(settings.EMBEDDING_MODEL)
+            self.ensure_collection(provider.dimension())
+            ingestor = DocumentIngestor(provider, self)
+            report = ingestor.ingest_from_json(data_path)
+            logger.info("Auto-bootstrapped vector store with default documents: %s", report.as_dict())
+            return True
+        except Exception as err:
+            logger.warning("Auto-bootstrap skipped or failed: %s", err)
+            return False
 
     # ------------------------------------------------------------------
     # Write path

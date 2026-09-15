@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.schemas.message import IncomingWhatsAppMessage
-from app.services.conversation_service import handle_message
+from app.services.conversations.conversation_service import handle_message
 
 
 client = TestClient(app)

@@ -3,7 +3,7 @@
 
 import argparse
 
-from app.services.knowledge_gap_repository import get_knowledge_gap_repository
+from app.services.rag.knowledge_gap_repository import get_knowledge_gap_repository
 
 
 def main() -> int:

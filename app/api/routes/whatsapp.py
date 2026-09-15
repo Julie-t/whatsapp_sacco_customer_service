@@ -7,8 +7,8 @@ from twilio.request_validator import RequestValidator
 
 from app.config.settings import settings
 from app.schemas.message import IncomingWhatsAppMessage
-from app.services.conversation_service import handle_message_async
-from app.services.whatsapp_service import WhatsAppService
+from app.services.conversations.conversation_service import handle_message_async
+from app.services.conversations.whatsapp_service import WhatsAppService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -32,6 +32,7 @@ def _validate_twilio_request(request: Request, body_bytes: bytes) -> bool:
 
 
 @router.post("/webhooks/whatsapp")
+@router.post("/")
 async def whatsapp_webhook(request: Request):
     body_bytes = await request.body()
     logger.info("Webhook received: %s", body_bytes[:500])

@@ -10,7 +10,7 @@ from app.ai.rag.answer_verifier import AnswerVerifier
 from app.ai.rag.context import build_context, select_context
 from app.schemas.intent import RequestTriageResult
 from app.config.settings import settings
-from app.services.rag_answer_service import RAGAnswerService
+from app.services.rag.rag_answer_service import RAGAnswerService
 
 from .dataset import load_cases
 from .metrics import groundedness, language_correctness, recall_metrics, relevance
@@ -227,32 +227,52 @@ def deterministic_route(question: str) -> RequestTriageResult:
         "fraud", "don't recognize", "do not recognize", "complain", "complaint",
         "speak to someone", "talk to someone", "human", "staff", "agent", "lost my pin",
         "lost pin", "withdraw immediately", "withdrawal immediately", "disagree with a charge",
-        "account balance", "account is closed", "account closed", "akaunti imefungwa",
+        "account is closed", "account closed", "akaunti imefungwa",
     )
     member_terms = (
         "my balance", "my loan balance", "my loan status", "my loan application",
-        "my transaction", "account balance",
+        "my current savings", "my transaction", "account balance", "savings balance",
+        "shares balance", "share capital do i", "how much share capital", "owe on my",
+        "monthly loan installment", "monthly loan instalment", "account summary",
         "how long have i been a member", "member since", "membership duration",
-        "akaunti yangu", "account imefungwa", "loan yangu",
+        "akaunti yangu", "account imefungwa", "loan yangu", "mkopo wangu",
+        "salio langu", "salio la akiba", "deni ya mkopo", "deni langu",
     )
     guardrail_terms = (
         "should i invest", "tell me where to invest", "investment recommendation",
         "which loan product is best", "step-by-step plan to invest", "stock market",
-        "guaranteed return", "invest in crypto", "investment in crypto",
+        "stocks", "stock", "securities exchange",
+        "guaranteed return", "invest in crypto", "investment in crypto", "cryptocurrency",
         "what percentage of my money should", "how much should i invest",
+    )
+    education_terms = (
+        "in simple terms", "compounding mechanics", "50/30/20", "how to budget", "how can i budget",
+        "kupanga bajeti", "emergency fund buffer", "good debt and bad debt",
+        "good debt vs bad debt", "akiba ya dharura", "compounding work for my",
+    )
+    goal_terms = (
+        "goal", "lengo", "malengo", "save ksh", "save for", "reach my target",
+        "save each month", "what if i save", "what if i increase", "target date",
+        "emergency fund goal", "school fees goal", "land purchase goal",
+        "monthly savings goal", "goal progress", "goal scenario", "my goals",
+        "kujiwekea lengo", "lengo langu",
     )
     ambiguous_terms = (
         "how much can i get", "how much can i borrow", "what can i get",
         "what languages", "what should i do", "tell me about loans",
     )
     known_short_questions = ("what is interest", "what is a sacco")
-    language = "sw" if any(term in normalized for term in ("nini", "naweza", "yangu", "kuhusu", "loan yangu", "akaunti", "mwanachama", "namna gani")) else "en"
+    language = "sw" if any(term in normalized for term in ("nini", "naweza", "yangu", "kuhusu", "loan yangu", "akaunti", "mwanachama", "namna gani", "lengo", "malengo", "riba", "bajeti", "dharura")) else "en"
     if human := any(term in normalized for term in human_terms):
         return RequestTriageResult(language=language, needs_member_data=False, likely_needs_human=human, reasoning="Sensitive request requires staff routing.")
-    if any(term in normalized for term in member_terms):
-        return RequestTriageResult(language=language, needs_member_data=True, likely_needs_human=False, reasoning="Request requires the member's own data.")
     if any(term in normalized for term in guardrail_terms):
         return RequestTriageResult(language=language, needs_member_data=False, likely_needs_human=True, reasoning="Directive financial request requires staff guidance.")
+    if any(term in normalized for term in education_terms):
+        return RequestTriageResult(language=language, needs_member_data=False, is_education_related=True, likely_needs_human=False, reasoning="Personalized financial education request.")
+    if any(term in normalized for term in goal_terms):
+        return RequestTriageResult(language=language, needs_member_data=False, is_goal_related=True, likely_needs_human=False, reasoning="Goal coaching and financial planning request.")
+    if any(term in normalized for term in member_terms):
+        return RequestTriageResult(language=language, needs_member_data=True, likely_needs_human=False, reasoning="Request requires the member's own data.")
     if any(term in normalized for term in ambiguous_terms) or (
         len(normalized.split()) <= 3
         and not any(term in normalized for term in known_short_questions)
@@ -266,15 +286,17 @@ def _routed_behavior(triage: RequestTriageResult, question: str) -> str | None:
     if triage.likely_needs_human:
         if any(term in normalized for term in ("complain", "complaint", "fraud", "recognize", "speak to someone", "talk to someone", "human", "staff", "agent", "lost", "withdrawal", "withdraw immediately", "withdrawal immediately", "account balance", "charge", "akaunti imefungwa", "imefungwa", "account closed")):
             return "human_escalation"
-        if any(term in normalized for term in ("should i invest", "guaranteed return", "recommendation", "stock market", "invest", "best for my business", "what percentage of my money should", "how much should i invest")):
+        if any(term in normalized for term in ("should i invest", "guaranteed return", "recommendation", "stock market", "stocks", "stock", "securities exchange", "invest", "cryptocurrency", "crypto", "best for my business", "what percentage of my money should", "how much should i invest")):
             return "guardrail"
         return "clarification"
+    if triage.is_education_related:
+        return "personalized_education"
+    if triage.is_goal_related:
+        return "goal_coaching"
     if triage.needs_member_data:
         if any(term in normalized for term in ("imefungwa", "account closed", "account is closed")):
             return "human_escalation"
-        if any(term in normalized for term in ("how long have i been a member", "member since", "membership duration", "account balance")):
-            return "human_escalation"
-        return "knowledge_gap"
+        return "member_data"
     return None
 
 
@@ -328,6 +350,9 @@ def build_report(
         "clarification": sum(1 for item in results if item.actual_behavior == "clarification"),
         "human_escalation": sum(1 for item in results if item.actual_behavior == "human_escalation"),
         "guardrail": sum(1 for item in results if item.actual_behavior == "guardrail"),
+        "member_data": sum(1 for item in results if item.actual_behavior == "member_data"),
+        "goal_coaching": sum(1 for item in results if item.actual_behavior == "goal_coaching"),
+        "personalized_education": sum(1 for item in results if item.actual_behavior == "personalized_education"),
         "provider_failure": sum(1 for item in results if item.actual_behavior == "provider_failure"),
     }
 
@@ -453,7 +478,7 @@ def build_report(
 
 def _is_routing_failure(result: EvaluationResult, case: EvaluationCase) -> bool:
     """Count only failures where triage selected the wrong application path."""
-    if case.expected_behavior not in {"clarification", "human_escalation", "guardrail"}:
+    if case.expected_behavior not in {"clarification", "human_escalation", "guardrail", "member_data", "goal_coaching", "personalized_education"}:
         return False
     return result.actual_behavior != case.expected_behavior
 

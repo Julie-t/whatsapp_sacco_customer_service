@@ -11,7 +11,7 @@ class EvaluationCase(BaseModel):
     language: Literal["en", "sw", "mixed"] = "en"
     sacco_id: str = "demo_sacco"
     expected_behavior: Literal[
-        "answer", "clarification", "knowledge_gap", "guardrail", "human_escalation", "provider_failure"
+        "answer", "clarification", "knowledge_gap", "guardrail", "human_escalation", "member_data", "goal_coaching", "personalized_education", "provider_failure"
     ]
     expected_source: str | None = None
     expected_fallback: str | None = None

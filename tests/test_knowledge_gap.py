@@ -3,10 +3,10 @@
 import pytest
 
 from app.models.knowledge_gap_event import KnowledgeGapEvent
-from app.services.knowledge_gap_repository import (
+from app.services.rag.knowledge_gap_repository import (
     InMemoryKnowledgeGapRepository,
 )
-from app.services.knowledge_gap_service import KnowledgeGapService
+from app.services.rag.knowledge_gap_service import KnowledgeGapService
 
 
 @pytest.mark.anyio

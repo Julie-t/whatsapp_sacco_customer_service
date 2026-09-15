@@ -63,7 +63,19 @@ class SentenceTransformerEmbeddingProvider(EmbeddingProvider):
             ) from exc
 
         logger.info("Loading embedding model: %s", self.model_name)
-        self._model = SentenceTransformer(self.model_name, device=self.device, cache_folder=self.cache_folder)
+        try:
+            self._model = SentenceTransformer(
+                self.model_name,
+                device=self.device,
+                cache_folder=self.cache_folder,
+                local_files_only=True,
+            )
+        except Exception:
+            self._model = SentenceTransformer(
+                self.model_name,
+                device=self.device,
+                cache_folder=self.cache_folder,
+            )
         self._dimension = int(self._model.get_sentence_embedding_dimension())
 
     def dimension(self) -> int:

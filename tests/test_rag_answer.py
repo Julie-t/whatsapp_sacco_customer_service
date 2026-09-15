@@ -6,7 +6,7 @@ from app.ai.rag.models import RAGResult
 from app.ai.rag.prompts import grounded_answer_messages
 from app.api.routes import rag as rag_route
 from app.main import app
-from app.services.rag_answer_service import NO_CONTEXT_ANSWER, RAGAnswerService
+from app.services.rag.rag_answer_service import NO_CONTEXT_ANSWER, RAGAnswerService
 
 
 class FakePipeline:

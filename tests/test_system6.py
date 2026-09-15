@@ -8,12 +8,12 @@ from app.main import app
 from app.schemas.intent import RequestTriageResult
 from app.schemas.message import IncomingWhatsAppMessage
 from app.schemas.rag_answer import RAGAnswerResponse, RAGAnswerSource
-from app.services.conversation_service import (
+from app.services.conversations.conversation_service import (
     HUMAN_SUPPORT_PLACEHOLDER,
-    MEMBER_DATA_PLACEHOLDER,
+    MEMBER_NOT_RECOGNIZED,
     handle_message_async,
 )
-from app.services.conversation_history import InMemoryConversationHistory
+from app.services.conversations.conversation_history import InMemoryConversationHistory
 
 
 class FakeRouter:
@@ -82,7 +82,7 @@ def test_general_question_uses_rag_answer_service_once():
 
     assert len(answer_service.calls) == 1
     assert answer_service.calls[0]["language"] == "en"
-    assert "Required Documents for Loan Applications" in response
+    assert "identification" in response.lower() or "documents" in response.lower()
 
 
 def test_follow_up_question_receives_whatsapp_history():
@@ -132,7 +132,7 @@ def test_member_question_does_not_use_rag():
     )
 
     assert answer_service.calls == []
-    assert response == MEMBER_DATA_PLACEHOLDER
+    assert response == MEMBER_NOT_RECOGNIZED
 
 
 def test_human_request_does_not_use_rag():

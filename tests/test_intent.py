@@ -10,10 +10,10 @@ from app.main import app
 from app.schemas.intent import RequestTriageResult
 from app.schemas.message import IncomingWhatsAppMessage
 from app.schemas.rag_answer import RAGAnswerResponse
-from app.services.conversation_service import (
+from app.services.conversations.conversation_service import (
     GENERAL_ASSISTANCE_PLACEHOLDER,
     HUMAN_SUPPORT_PLACEHOLDER,
-    MEMBER_DATA_PLACEHOLDER,
+    MEMBER_NOT_RECOGNIZED,
     handle_message_async,
 )
 
@@ -192,7 +192,7 @@ def test_conversation_routes_member_data_request():
 
     response = asyncio.run(handle_message_async(message, router))
 
-    assert response == MEMBER_DATA_PLACEHOLDER
+    assert response == MEMBER_NOT_RECOGNIZED
 
 
 def test_conversation_routes_general_assistance():

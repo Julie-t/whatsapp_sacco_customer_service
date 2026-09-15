@@ -8,7 +8,7 @@ from pathlib import Path
 from app.ai.llm import LLM
 from app.ai.intent_router import IntentRouter
 from app.ai.rag.pipeline import RAGPipeline
-from app.services.rag_answer_service import RAGAnswerService
+from app.services.rag.rag_answer_service import RAGAnswerService
 from app.config.settings import settings
 
 from .offline import seed_demo_store

@@ -27,11 +27,14 @@ class IntentRouter:
     def __init__(self, llm: LLM | None = None):
         self.llm = llm or LLM()
 
-    async def classify(self, message: str) -> RequestTriageResult:
+    async def classify(self, message: str, context: str | None = None) -> RequestTriageResult:
         try:
+            system_content = ROUTER_PROMPT
+            if context:
+                system_content += f"\n\nRECENT CONVERSATION CONTEXT:\n{context}"
             raw_response = await self.llm.generate(
                 [
-                    {"role": "system", "content": ROUTER_PROMPT},
+                    {"role": "system", "content": system_content},
                     {"role": "user", "content": message},
                 ]
             )

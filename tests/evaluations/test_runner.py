@@ -3,7 +3,7 @@ import asyncio
 import pytest
 
 from app.ai.rag.models import RAGResult
-from app.services.rag_answer_service import RAGAnswerService
+from app.services.rag.rag_answer_service import RAGAnswerService
 from evaluations.runner import EvaluationRunner, build_report, deterministic_route
 from evaluations.models import EvaluationCase, EvaluationResult, MetricResult
 
@@ -168,9 +168,12 @@ def test_deterministic_route_sensitive_cases(question, member_data, human):
         ("I want to make a withdrawal immediately.", "human_escalation"),
         ("Tell me about loans", "clarification"),
         ("What percentage of my money should go to emergency savings?", "guardrail"),
-        ("How do I check my account balance?", "human_escalation"),
+        ("How do I check my account balance?", "member_data"),
         ("Akaunti yangu imefungwa kwa nini?", "human_escalation"),
         ("How do I calculate my loan repayment?", None),
+        ("What is my goal progress?", "goal_coaching"),
+        ("I want to save KSh 100,000 for an emergency fund by December 2026", "goal_coaching"),
+        ("What is compound interest in simple terms?", "personalized_education"),
     ],
 )
 def test_deterministic_route_evaluation_failures(question, expected):

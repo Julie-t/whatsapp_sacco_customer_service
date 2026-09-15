@@ -41,6 +41,9 @@ def render_report(report: dict[str, object]) -> str:
             f"Clarification: {execution.get('clarification', 0)}",
             f"Human escalation: {execution.get('human_escalation', 0)}",
             f"Guardrail: {execution.get('guardrail', 0)}",
+            f"Member data: {execution.get('member_data', 0)}",
+            f"Goal coaching: {execution.get('goal_coaching', 0)}",
+            f"Personalized education: {execution.get('personalized_education', 0)}",
             f"Provider failure: {execution.get('provider_failure', 0)}",
             "",
         ])

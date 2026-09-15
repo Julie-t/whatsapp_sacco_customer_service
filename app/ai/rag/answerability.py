@@ -122,6 +122,8 @@ def _missing_required_terms(query: str, evidence: str, required_terms: set[str])
         return set() if "increase" in evidence and "contribution" in evidence else {"increase contribution"}
     if "convert" in query and "savings" in query and "shares" in query:
         return set() if "convert" in evidence and "savings" in evidence and "share" in evidence else {"conversion process"}
+    if "offshore" in query:
+        return {"offshore investment"} if "offshore" not in evidence else set()
     if "working abroad" in query:
         return {"working abroad"} if not any(term in evidence for term in ("abroad", "overseas")) else set()
     if "minimum balance" in query:
