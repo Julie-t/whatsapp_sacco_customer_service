@@ -103,7 +103,10 @@ def format_loan_response(snapshot: MemberDataResponse, *, demo_label: bool = Tru
 # Sub-question detection helpers
 # ---------------------------------------------------------------------------
 _BALANCE_KEYWORDS = {"balance", "savings", "shares", "deposit", "pesa", "akiba"}
-_LOAN_KEYWORDS = {"loan", "owe", "repay", "instalment", "installment", "deni", "mkopo"}
+_LOAN_KEYWORDS = {
+    "loan", "owe", "repay", "repayment", "instalment", "installment",
+    "deni", "mkopo", "payment", "payments", "pay", "due", "kulipa",
+}
 
 
 def detect_sub_question(query: str) -> str:

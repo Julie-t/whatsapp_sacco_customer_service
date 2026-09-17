@@ -34,6 +34,10 @@ class InMemoryMemberRepository:
         phone_hash = _hash_phone(phone_number)
         member_id = self._phone_index.get(phone_hash)
         if member_id is None:
+            raw = phone_number.strip().replace(" ", "")
+            alt = raw[len("whatsapp:"):] if raw.startswith("whatsapp:") else f"whatsapp:{raw}"
+            member_id = self._phone_index.get(_hash_phone(alt))
+        if member_id is None:
             return None
         return self._members.get(member_id)
 
@@ -45,3 +49,25 @@ class InMemoryMemberRepository:
 
     def get_loans(self, member_id: str) -> list[MemberLoan]:
         return list(self._loans.get(member_id, []))
+
+    def create_or_get_demo_member(
+        self,
+        phone_number: str,
+        display_name: str = "Member",
+        sacco_id: str = "demo_sacco",
+    ) -> Member:
+        phone_hash = _hash_phone(phone_number)
+        if phone_hash in self._phone_index:
+            return self._members[self._phone_index[phone_hash]]
+        demo_id = f"demo_{phone_hash[:8]}"
+        member = Member(
+            id=demo_id,
+            phone_hash=phone_hash,
+            display_name=display_name,
+            preferred_language="en",
+            knowledge_level="beginner",
+            sacco_id=sacco_id,
+            is_demo=True,
+        )
+        self.add_member(member, phone_number)
+        return member

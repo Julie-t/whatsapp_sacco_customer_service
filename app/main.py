@@ -1,8 +1,40 @@
+import logging
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
+
+logger = logging.getLogger(__name__)
+# Reload triggered to load updated environment configuration
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Pre-warm models and services on startup to eliminate cold-start latency for webhooks."""
+    try:
+        from app.ai.rag.pipeline import _default_embedding_provider
+        logger.info("Pre-warming embedding model on startup...")
+        provider = _default_embedding_provider()
+        provider.embed_query("warmup")
+        logger.info("Embedding model warmed up successfully.")
+
+        from app.services.conversations.conversation_service import (
+            _get_rag_answer_service,
+            _get_query_rewriter,
+            _get_education_service,
+        )
+        _get_rag_answer_service()
+        _get_query_rewriter()
+        _get_education_service()
+        logger.info("Conversation services pre-warmed.")
+    except Exception as exc:
+        logger.warning("Startup model warmup skipped or failed: %s", exc)
+    yield
+
+
+app = FastAPI(title="SACCO AI Companion & Admin Operations", lifespan=lifespan)
 
 from app.api.routes import admin as admin_router
 from app.api.routes import ai as ai_router
@@ -18,7 +50,6 @@ from app.api.routes import whatsapp as whatsapp_router
 from app.database.connection import get_connection
 from app.core.metrics import snapshot
 
-app = FastAPI(title="SACCO AI Companion & Admin Operations")
 
 app.include_router(whatsapp_router.router)
 app.include_router(ai_router.router)

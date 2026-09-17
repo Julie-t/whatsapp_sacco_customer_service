@@ -142,3 +142,24 @@ def test_multiple_members_isolated(repo):
     bob = repo.get_by_phone("whatsapp:+254700000002")
     assert alice.id != bob.id
     assert repo.get_accounts("mem_001") != repo.get_accounts("mem_002")
+
+
+def test_create_or_get_demo_member(repo):
+    from app.services.members.member_service import MemberDataService
+
+    # 1. Non-existent phone creates a new demo member
+    demo1 = repo.create_or_get_demo_member("+254799000111", display_name="Demo User")
+    assert demo1.is_demo is True
+    assert demo1.display_name == "Demo User"
+    assert demo1.id.startswith("demo_")
+
+    # 2. Re-querying with the same phone returns existing demo member
+    demo2 = repo.create_or_get_demo_member("+254799000111")
+    assert demo2.id == demo1.id
+
+    # 3. Test through MemberDataService
+    svc = MemberDataService(repository=repo)
+    prof = svc.get_or_create_demo_member("+254799000222")
+    assert prof.id.startswith("demo_")
+    assert prof.display_name == "Member"
+    assert svc.resolve_member("+254799000222") is not None

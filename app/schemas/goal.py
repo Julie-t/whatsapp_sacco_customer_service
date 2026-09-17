@@ -70,6 +70,21 @@ class ScenarioAnalysisResult(BaseModel):
     narrative_summary: str
 
 
+class ScenarioComparisonResult(BaseModel):
+    """Comparative analysis between two proposed contribution options for an active goal."""
+    target_amount: float
+    current_amount: float
+    amount_remaining: float
+    option_a_amount: float
+    option_a_months: int
+    option_a_date: date
+    option_b_amount: float
+    option_b_months: int
+    option_b_date: date
+    months_difference: int  # option_a_months - option_b_months (positive = option B is faster)
+    narrative_summary: str
+
+
 class GoalResponse(BaseModel):
     id: str
     member_id: str
@@ -99,6 +114,7 @@ class GoalExtractionResult(BaseModel):
     monthly_contribution: Optional[float] = None
     is_scenario_query: bool = False
     proposed_scenario_amount: Optional[float] = None
+    secondary_scenario_amount: Optional[float] = None
     is_progress_inquiry: bool = False
     is_balance_update: bool = False
     needs_clarification: bool = False

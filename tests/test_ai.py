@@ -8,6 +8,7 @@ from unittest.mock import patch
 from app.main import app
 from app.ai.providers.groq import GroqProvider, GroqRateLimitError
 from app.ai.llm import LLM
+from app.config.settings import settings
 from app.schemas.ai import AICompletionRequest
 
 client = TestClient(app)
@@ -146,7 +147,7 @@ async def test_groq_provider_uses_configured_generation_payload(monkeypatch):
 
     assert result == "Configured answer"
     assert request == {
-        "model": "openai/gpt-oss-120b",
+        "model": settings.GROQ_MODEL,
         "messages": [{"role": "user", "content": "Hi"}],
         "max_tokens": 500,
         "temperature": 0.2,

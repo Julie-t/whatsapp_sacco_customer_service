@@ -146,6 +146,36 @@ def test_is_self_contained_recognizes_complete_questions():
     assert QueryRewriter._is_self_contained("What are the loan requirements?")
 
 
+def test_is_self_contained_recognizes_conjunction_and_attribute_followups():
+    """Heuristic should correctly identify 'And what is the interest rate?' as follow-up."""
+    assert not QueryRewriter._is_self_contained("And what is the interest rate?")
+    assert not QueryRewriter._is_self_contained("What is the interest rate?")
+    assert not QueryRewriter._is_self_contained("And what are the fees?")
+    assert not QueryRewriter._is_self_contained("What about the requirements?")
+    assert not QueryRewriter._is_self_contained("How long does it take?")
+
+
+@pytest.mark.anyio
+async def test_follow_up_interest_rate_reformulation():
+    """Follow-up question 'And what is the interest rate?' with loan history rewrites to loan interest rates."""
+    llm = FakeLLM({"interest rate": "What are the interest rates for the SACCO's loan products?"})
+    rewriter = QueryRewriter(llm)
+
+    history = [
+        ConversationTurn(role="user", content="What types of loans do you have?"),
+        ConversationTurn(role="assistant", content="Demo SACCO offers development, emergency, and school fees loans."),
+    ]
+
+    result = await rewriter.rewrite(
+        latest_message="And what is the interest rate?",
+        conversation_history=history,
+    )
+
+    assert "interest rate" in result.lower()
+    assert "loan" in result.lower()
+    assert len(llm.calls) == 1
+
+
 @pytest.mark.anyio
 async def test_long_history_uses_recent_turns_only():
     """Long history should be truncated to avoid token bloat."""

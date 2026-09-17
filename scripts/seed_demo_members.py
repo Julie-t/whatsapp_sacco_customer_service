@@ -30,9 +30,9 @@ DEMO_MEMBERS = [
     {
         "id": "member_001",
         "phone": "whatsapp:+254110923440",
-        "display_name": "Edna Maina",
+        "display_name": "Peter Mwangi",
         "preferred_language": "mixed",
-        "knowledge_level": "beginner"
+        "knowledge_level": "beginner",
     },
     {
         "id": "member_002",
@@ -51,8 +51,8 @@ DEMO_MEMBERS = [
 ]
 
 DEMO_ACCOUNTS = [
-    # member_001
-    {"member_id": "member_001", "account_type": "savings", "account_name": "Regular Savings", "balance": 32450.00},
+    # member_001 (Peter Mwangi - Small hardware shop owner)
+    {"member_id": "member_001", "account_type": "savings", "account_name": "Regular Savings", "balance": 80000.00},
     {"member_id": "member_001", "account_type": "shares", "account_name": "Share Capital", "balance": 15000.00},
     # member_002
     {"member_id": "member_002", "account_type": "savings", "account_name": "Regular Savings", "balance": 78200.00},

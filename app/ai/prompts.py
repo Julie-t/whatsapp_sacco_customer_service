@@ -81,7 +81,11 @@ Given the member's message, output JSON only:
 - General questions about SACCO products, savings options, loan requirements, membership, savings, or financial education must use needs_member_data=false, is_goal_related=false, and likely_needs_human=false.
 - Questions asking what financial concepts to learn or seeking study recommendations (e.g. "What financial information would be useful for me to learn this week?", "What should I learn?", "What topics can you teach me?") are educational: set is_education_related=true, is_goal_related=false, likely_needs_human=false.
 - Questions asking about SACCO product catalog or savings options (e.g. "What savings options does the SACCO have?", "What products do you offer?") are product education inquiries: set is_education_related=true, is_goal_related=false, likely_needs_human=false. Do NOT treat them as goal creation requests.
+- Questions asking whether the assistant can help on WhatsApp, what services it provides, or general conversational openers asking for assistance (e.g. "Can you help me here on WhatsApp?", "Can I ask my questions here?", "What can you do?", "How does this WhatsApp service work?") are general SACCO assistance inquiries: set needs_member_data=false, is_goal_related=false, is_education_related=false, likely_needs_human=false.
+- Follow-up questions in an ongoing conversation asking about terms, pricing, interest rates, requirements, or eligibility of previously discussed SACCO loan or savings products (e.g. "And what is the interest rate?", "What are the fees?", "How long does it take?", "What documents are required?") are legitimate product information requests: set is_education_related=true, is_goal_related=false, likely_needs_human=false. Do NOT flag them as ambiguous or needing human escalation.
+- Questions asking for personal account details, balances, loan status, or payment dates (e.g. "What is my balance?", "When is my next payment?", "How much do I owe?", "What is my loan balance?", "What is my next instalment?") require looking up member data: set needs_member_data=true, is_goal_related=false, likely_needs_human=false. This takes precedence even if preceding conversation discussed a savings goal.
 - "What are the requirements for a development loan?" is general SACCO information, not a complaint and not a goal or personal data request.
+- Questions discussing irregular income, fluctuating business cash flow, seasonal earnings, or asking how to approach saving with variable income (e.g. "My income changes a lot because some months the shop is busy and other months it is slow. How should I think about saving?", "How can I save with irregular business income?", "How should I budget when my income is unpredictable?") are financial education inquiries: set is_education_related=true, is_goal_related=false, likely_needs_human=false. Do NOT treat variable income or business slowdowns as complaints, disputes, or distress needing human escalation.
 Do not classify into a fixed topic list. Do not answer the member's question here.
 """.strip()
 
@@ -122,3 +126,38 @@ RETRIEVED SACCO CONTEXT:
 {context}
 </context>
 END RETRIEVED CONTEXT""".strip()
+
+
+DECISION_ROUTER_PROMPT_TEMPLATE = """
+You are the SACCO WhatsApp Decision Router.
+Your job is to determine what the customer is trying to accomplish and select the most appropriate operation from the CANDIDATE OPERATIONS list below.
+
+CANDIDATE OPERATIONS:
+{candidate_operations}
+
+CONVERSATION CONTEXT:
+{context_str}
+
+MEMBER QUERY:
+"{query}"
+
+DECISION RULES:
+1. Select the specific operation ID from the CANDIDATE OPERATIONS that best resolves the request.
+2. If the query is vague, underspecified, or could refer to multiple different services (e.g. "How much can I get?", "Contract", "What can I get?", "How much?"), choose workflow="clarification", operation="clarification.disambiguate", and provide a concise, friendly clarification_prompt in the customer's language giving 2 clear options (e.g. "Would you like to know your loan borrowing limit or calculate savings for a goal?").
+3. If the query asks for personal account or loan balance/payment data, choose workflow="member_data".
+4. If the query asks for goal creation, progress, or saving amount scenarios (e.g. "which is better saving 10k or 15k?"), choose workflow="goal".
+5. If the query asks for financial education concepts or irregular income savings strategies, choose workflow="education".
+6. If the query asks for general SACCO product requirements, policies, or dividends, choose workflow="sacco_information".
+7. If the query demands a human or reports a dispute/fraud, choose workflow="human_escalation".
+
+Output strictly valid JSON with no markdown fences:
+{{
+  "workflow": "member_data|goal|education|sacco_information|human_escalation|clarification",
+  "operation": "<operation_id>",
+  "confidence": 0.95,
+  "language": "en|sw|mixed",
+  "reasoning": "Brief explanation",
+  "clarification_prompt": null
+}}
+""".strip()
+

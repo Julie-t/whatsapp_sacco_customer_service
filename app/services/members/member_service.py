@@ -79,6 +79,33 @@ class MemberDataService:
             sacco_id=member.sacco_id,
         )
 
+    def get_or_create_demo_member(
+        self,
+        phone_number: str,
+        display_name: str = "Member",
+        sacco_id: str | None = None,
+    ) -> MemberProfile:
+        """Ensure demo member exists in the repository and return MemberProfile."""
+        from app.config.settings import settings
+        sid = sacco_id or settings.DEFAULT_SACCO_ID
+        if hasattr(self._repo, "create_or_get_demo_member"):
+            member = self._repo.create_or_get_demo_member(phone_number, display_name=display_name, sacco_id=sid)
+            return MemberProfile(
+                id=member.id,
+                display_name=member.display_name,
+                preferred_language=member.preferred_language,
+                knowledge_level=member.knowledge_level,
+                sacco_id=member.sacco_id,
+            )
+        phone_hash = _hash_phone(phone_number)
+        return MemberProfile(
+            id=f"demo_{phone_hash[:8]}",
+            display_name=display_name,
+            preferred_language="en",
+            knowledge_level="beginner",
+            sacco_id=sid,
+        )
+
     # ------------------------------------------------------------------
     # Financial data
     # ------------------------------------------------------------------

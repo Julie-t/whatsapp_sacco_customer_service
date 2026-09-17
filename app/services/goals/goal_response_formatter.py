@@ -8,14 +8,18 @@ Design rules:
 - Optional '(demo data)' tag
 """
 
-from app.schemas.goal import GoalResponse, ScenarioAnalysisResult
+from app.schemas.goal import GoalResponse, ScenarioAnalysisResult, ScenarioComparisonResult
 
 
 def _ksh(amount: float) -> str:
     """Format monetary amount as 'KSh 32,450'."""
-    if amount == int(amount):
-        return f"KSh {int(amount):,}"
-    return f"KSh {amount:,.2f}"
+    try:
+        f_amt = float(amount)
+        if f_amt == int(f_amt):
+            return f"KSh {int(f_amt):,}"
+        return f"KSh {f_amt:,.2f}"
+    except (ValueError, TypeError):
+        return f"KSh {amount}"
 
 
 def format_goal_created(goal: GoalResponse, *, demo_label: bool = True) -> str:
@@ -63,8 +67,13 @@ def format_goal_progress(goal: GoalResponse, *, demo_label: bool = True) -> str:
     return "\n".join(lines)
 
 
-def format_goal_updated(goal: GoalResponse, *, demo_label: bool = True) -> str:
-    """Format confirmation when a member updates their current savings or goal progress."""
+def format_goal_updated(
+    goal: GoalResponse,
+    *,
+    demo_label: bool = True,
+    custom_note: str | None = None,
+) -> str:
+    """Format confirmation when a member updates their current savings, contribution, or goal progress."""
     lines = [
         f"Updated: {goal.name}!",
         "",
@@ -72,15 +81,26 @@ def format_goal_updated(goal: GoalResponse, *, demo_label: bool = True) -> str:
         f"Target date: {goal.target_date.strftime('%B %Y')}",
         f"Current saved: {_ksh(goal.current_amount)}",
     ]
+    if goal.contribution_amount:
+        lines.append(f"Monthly contribution: {_ksh(goal.contribution_amount)}/month")
     if goal.calculation:
         calc = goal.calculation
         lines.append(f"Amount remaining: {_ksh(calc.amount_remaining)}")
         lines.append(f"Progress: {calc.progress_percentage:.0f}% of your target")
-        lines.append(f"Required monthly contribution: {_ksh(calc.required_monthly_contribution)}/month")
+        if not goal.contribution_amount:
+            lines.append(f"Required monthly contribution: {_ksh(calc.required_monthly_contribution)}/month")
         lines.append(f"Timeline: {calc.months_remaining} months")
 
     lines.append("")
-    lines.append("I have updated your savings plan accordingly.")
+    if custom_note:
+        lines.append(custom_note)
+    elif goal.notes and "variable" in goal.notes.lower():
+        lines.append(
+            "Since your income changes from month to month, we can also look at different contribution scenarios."
+        )
+    else:
+        lines.append("I have updated your savings plan accordingly.")
+
     if demo_label:
         lines.append("")
         lines.append("(demo data)")
@@ -96,6 +116,26 @@ def format_goal_scenario(scenario: ScenarioAnalysisResult, *, demo_label: bool =
         f"Projected completion: {scenario.proposed_projected_months} months ({scenario.proposed_projected_date.strftime('%B %Y')})",
         "",
         scenario.narrative_summary.replace("—", " - "),
+    ]
+    if demo_label:
+        lines.append("")
+        lines.append("(demo data)")
+    return "\n".join(lines)
+
+
+def format_scenario_comparison(goal_name: str, comparison: ScenarioComparisonResult, *, demo_label: bool = True) -> str:
+    """Format comparative analysis between two proposed contribution options."""
+    lines = [
+        f"Comparing options for your {goal_name}:",
+        f"Remaining target: {_ksh(comparison.amount_remaining)}",
+        "",
+        f"Option 1: {_ksh(comparison.option_a_amount)}/month",
+        f"Timeline: {comparison.option_a_months} months ({comparison.option_a_date.strftime('%B %Y')})",
+        "",
+        f"Option 2: {_ksh(comparison.option_b_amount)}/month",
+        f"Timeline: {comparison.option_b_months} months ({comparison.option_b_date.strftime('%B %Y')})",
+        "",
+        comparison.narrative_summary.replace("—", " - "),
     ]
     if demo_label:
         lines.append("")

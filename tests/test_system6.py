@@ -175,3 +175,62 @@ def test_whatsapp_route_returns_conversation_response_as_twiml(monkeypatch):
     assert response.headers["content-type"] == "application/xml"
     assert "Grounded response" in response.text
     conversation.assert_awaited_once()
+
+
+def test_follow_up_interest_rate_routes_to_rag_with_rewritten_query():
+    class FakeRewriter:
+        def __init__(self, rewritten):
+            self.rewritten = rewritten
+            self.calls = []
+
+        async def rewrite(self, latest_message, conversation_history=None):
+            self.calls.append((latest_message, conversation_history))
+            return self.rewritten
+
+    router = FakeRouter(triage())
+    answer_service = FakeAnswerService(
+        RAGAnswerResponse(
+            query="What are the interest rates for the SACCO's loan products?",
+            answer="Development loans are ~1% per month, emergency loans are ~2% per month.",
+            sources=[
+                RAGAnswerSource(
+                    document_id="test_loan_rates_terms",
+                    chunk_id="c1",
+                    title="Loan Rates and Repayment Terms",
+                    source="synthetic test data",
+                    score=0.92,
+                )
+            ],
+            grounded=True,
+        )
+    )
+    history = InMemoryConversationHistory()
+    history.append("+254700000000", "user", "What types of loans do you have?")
+    history.append("+254700000000", "assistant", "We have development, emergency, and school-fees loans.")
+
+    rewriter = FakeRewriter("What are the interest rates for the SACCO's loan products?")
+
+    response = asyncio.run(
+        handle_message_async(
+            message("And what is the interest rate?"),
+            intent_router=router,
+            rag_answer_service=answer_service,
+            history_store=history,
+            query_rewriter=rewriter,
+        )
+    )
+
+    # Verify query rewriter was called with original fragment and conversation history
+    assert len(rewriter.calls) == 1
+    assert rewriter.calls[0][0] == "And what is the interest rate?"
+    assert len(rewriter.calls[0][1]) == 2
+
+    # Verify router classified the REWRITTEN query, not the raw fragment
+    assert router.messages == ["What are the interest rates for the SACCO's loan products?"]
+
+    # Verify RAGAnswerService received the rewritten query
+    assert answer_service.calls[0]["query"] == "What are the interest rates for the SACCO's loan products?"
+
+    # Verify grounded answer is returned without human escalation
+    assert "development loans are ~1%" in response.lower()
+    assert HUMAN_SUPPORT_PLACEHOLDER not in response

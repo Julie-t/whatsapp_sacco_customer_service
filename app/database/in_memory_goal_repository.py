@@ -30,7 +30,7 @@ class InMemoryGoalRepository:
         results = [g for g in self._goals.values() if g.member_id == member_id]
         if status:
             results = [g for g in results if g.status == status]
-        return sorted(results, key=lambda g: g.target_date)
+        return sorted(results, key=lambda g: (g.target_date, -(g.updated_at.timestamp() if g.updated_at else 0)))
 
     def get_active_goal(self, member_id: str) -> Optional[FinancialGoal]:
         active = self.get_by_member(member_id, status=GoalStatus.ACTIVE)

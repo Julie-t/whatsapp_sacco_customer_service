@@ -104,7 +104,7 @@ class GoalRepository:
                                status, notification_frequency, notes, is_demo, created_at, updated_at
                         FROM financial_goals
                         WHERE member_id = %s AND status = %s
-                        ORDER BY target_date ASC
+                        ORDER BY target_date ASC, updated_at DESC, created_at DESC
                         """,
                         (member_id, status.value),
                     )
@@ -116,7 +116,7 @@ class GoalRepository:
                                status, notification_frequency, notes, is_demo, created_at, updated_at
                         FROM financial_goals
                         WHERE member_id = %s
-                        ORDER BY target_date ASC
+                        ORDER BY target_date ASC, updated_at DESC, created_at DESC
                         """,
                         (member_id,),
                     )

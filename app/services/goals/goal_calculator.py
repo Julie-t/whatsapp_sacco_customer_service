@@ -11,7 +11,7 @@ from datetime import date, timedelta
 from typing import Optional
 
 from app.models.goal import FinancialGoal
-from app.schemas.goal import GoalCalculationResult, ScenarioAnalysisResult
+from app.schemas.goal import GoalCalculationResult, ScenarioAnalysisResult, ScenarioComparisonResult
 
 
 def calculate_amount_remaining(target_amount: float, current_amount: float) -> float:
@@ -140,6 +140,54 @@ def calculate_scenario(
         proposed_projected_months=proposed_months,
         current_projected_date=current_date,
         proposed_projected_date=proposed_date or target_date,
+        months_difference=months_diff,
+        narrative_summary=narrative,
+    )
+
+
+def calculate_scenario_comparison(
+    target_amount: float,
+    current_amount: float,
+    target_date: date,
+    option_a_amount: float,
+    option_b_amount: float,
+    notes: Optional[str] = None,
+    as_of: Optional[date] = None,
+) -> ScenarioComparisonResult:
+    """Compare two proposed monthly contribution amounts against an active goal."""
+    ref_date = as_of or date.today()
+    remaining = calculate_amount_remaining(target_amount, current_amount)
+
+    lower_amt = min(option_a_amount, option_b_amount)
+    higher_amt = max(option_a_amount, option_b_amount)
+
+    date_a, months_a = calculate_projected_completion(current_amount, target_amount, lower_amt, as_of=ref_date)
+    date_b, months_b = calculate_projected_completion(current_amount, target_amount, higher_amt, as_of=ref_date)
+
+    months_diff = months_a - months_b
+
+    is_variable = bool(notes and "variable" in notes.lower())
+    narrative_parts = [
+        f"Saving KSh {higher_amt:,.0f}/month reaches your KSh {target_amount:,.0f} goal in {months_b} months ({date_b.strftime('%B %Y') if date_b else 'N/A'}), which is {months_diff} months faster than saving KSh {lower_amt:,.0f}/month ({months_a} months, {date_a.strftime('%B %Y') if date_a else 'N/A'}).",
+        f"Saving KSh {lower_amt:,.0f}/month puts less pressure on your monthly cash flow.",
+    ]
+    if is_variable:
+        narrative_parts.append("Since your business income varies, a flexible approach works well: treat KSh 10,000 as your steady baseline, and contribute up to KSh 15,000 during stronger months.")
+    else:
+        narrative_parts.append("If your monthly budget comfortably supports it, KSh 15,000 will help you complete the goal significantly earlier.")
+
+    narrative = " ".join(narrative_parts)
+
+    return ScenarioComparisonResult(
+        target_amount=target_amount,
+        current_amount=current_amount,
+        amount_remaining=remaining,
+        option_a_amount=lower_amt,
+        option_a_months=months_a,
+        option_a_date=date_a or target_date,
+        option_b_amount=higher_amt,
+        option_b_months=months_b,
+        option_b_date=date_b or target_date,
         months_difference=months_diff,
         narrative_summary=narrative,
     )

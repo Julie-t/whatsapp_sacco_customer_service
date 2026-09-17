@@ -14,10 +14,12 @@ from app.schemas.goal import (
     GoalResponse,
     GoalUpdate,
     ScenarioAnalysisResult,
+    ScenarioComparisonResult,
 )
 from app.services.goals.goal_calculator import (
     calculate_goal_metrics,
     calculate_scenario,
+    calculate_scenario_comparison,
 )
 
 logger = logging.getLogger(__name__)
@@ -105,6 +107,25 @@ class GoalService:
             target_date=goal.target_date,
             proposed_monthly_contribution=proposed_monthly_contribution,
             current_monthly_contribution=goal.contribution_amount,
+        )
+
+    def calculate_comparison(
+        self,
+        goal_id: str,
+        option_a_amount: float,
+        option_b_amount: float,
+    ) -> Optional[ScenarioComparisonResult]:
+        """Run comparative analysis between two proposed contribution amounts against an active goal."""
+        goal = self._repo.get_by_id(goal_id)
+        if not goal:
+            return None
+        return calculate_scenario_comparison(
+            target_amount=goal.target_amount,
+            current_amount=goal.current_amount,
+            target_date=goal.target_date,
+            option_a_amount=option_a_amount,
+            option_b_amount=option_b_amount,
+            notes=goal.notes,
         )
 
     def _to_response(self, goal: FinancialGoal) -> GoalResponse:

@@ -7,7 +7,7 @@ provider-agnostic and not coupled to a specific LLM backend.
 """
 
 from abc import ABC, abstractmethod
-from typing import List
+from typing import Any, List
 
 import logging
 
@@ -44,6 +44,8 @@ class SentenceTransformerEmbeddingProvider(EmbeddingProvider):
     with no network dependency.
     """
 
+    _MODEL_CACHE: dict[tuple[str, str | None, str | None], Any] = {}
+
     def __init__(self, model_name: str, device: str | None = None, cache_folder: str | None = None):
         self.model_name = model_name
         self.device = device
@@ -52,6 +54,12 @@ class SentenceTransformerEmbeddingProvider(EmbeddingProvider):
         self._dimension: int | None = None
 
     def _ensure_model(self):
+        cache_key = (self.model_name, self.device, self.cache_folder)
+        if self._model is None and cache_key in self._MODEL_CACHE:
+            self._model = self._MODEL_CACHE[cache_key]
+            self._dimension = int(self._model.get_sentence_embedding_dimension())
+            return
+
         if self._model is not None:
             return
         try:
@@ -77,6 +85,7 @@ class SentenceTransformerEmbeddingProvider(EmbeddingProvider):
                 cache_folder=self.cache_folder,
             )
         self._dimension = int(self._model.get_sentence_embedding_dimension())
+        self._MODEL_CACHE[cache_key] = self._model
 
     def dimension(self) -> int:
         self._ensure_model()
@@ -138,3 +147,8 @@ class MockEmbeddingProvider(EmbeddingProvider):
 
     def embed_query(self, text: str) -> Vector:
         return self._embed(text)
+
+
+# Backward compatibility alias for startup and legacy references
+EmbeddingService = EmbeddingProvider
+

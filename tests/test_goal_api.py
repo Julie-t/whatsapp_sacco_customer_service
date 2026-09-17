@@ -13,6 +13,7 @@ from app.models.goal import GoalType
 from app.models.member import Member
 from app.schemas.intent import RequestTriageResult
 from app.schemas.message import IncomingWhatsAppMessage
+from app.services.conversations.conversation_history import InMemoryConversationHistory
 from app.services.conversations.conversation_service import handle_message_async
 from app.services.goals.goal_service import GoalService
 from app.services.members.member_service import MemberDataService
@@ -102,6 +103,7 @@ async def test_handle_goal_query_whatsapp_flow():
 
     goal_repo = InMemoryGoalRepository()
     goal_service = GoalService(repository=goal_repo)
+    history_store = InMemoryConversationHistory()
 
     mock_router = MagicMock()
     mock_router.classify = AsyncMock(
@@ -124,6 +126,7 @@ async def test_handle_goal_query_whatsapp_flow():
         intent_router=mock_router,
         member_service=member_service,
         goal_service=goal_service,
+        history_store=history_store,
     )
     assert "Goal set:" in response
     assert "KSh 240,000" in response
@@ -140,6 +143,7 @@ async def test_handle_goal_query_whatsapp_flow():
         intent_router=mock_router,
         member_service=member_service,
         goal_service=goal_service,
+        history_store=history_store,
     )
     assert "Progress for" in progress_res
     assert "KSh 240,000" in progress_res
@@ -154,6 +158,7 @@ async def test_handle_goal_query_whatsapp_flow():
         intent_router=mock_router,
         member_service=member_service,
         goal_service=goal_service,
+        history_store=history_store,
     )
     assert "Proposed monthly savings: KSh 15,000/month" in scenario_res
     assert "sooner" in scenario_res

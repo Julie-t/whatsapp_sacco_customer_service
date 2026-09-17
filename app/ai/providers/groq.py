@@ -10,11 +10,23 @@ logger = logging.getLogger(__name__)
 
 
 class GroqRateLimitError(RuntimeError):
-    """Raised after bounded retries are exhausted for a Groq 429 response."""
+    """Raised after bounded retries are exhausted or fail-fast for a Groq 429 response."""
 
-    def __init__(self, message: str, retry_after: float | None = None):
+    def __init__(
+        self,
+        message: str,
+        retry_after: float | None = None,
+        limit_type: str = "UNKNOWN",
+    ):
         super().__init__(message)
         self.retry_after = retry_after
+        self.limit_type = limit_type
+
+
+def _is_tpd_exhausted(response: httpx.Response) -> bool:
+    """Determine if a 429 response represents daily token quota (TPD) exhaustion."""
+    text = response.text.lower()
+    return "tokens per day" in text or "(tpd)" in text or "tpd:" in text
 
 
 def _retry_after_seconds(response: httpx.Response) -> float | None:
@@ -25,12 +37,25 @@ def _retry_after_seconds(response: httpx.Response) -> float | None:
         except ValueError:
             pass
 
-    match = re.search(
-        r"try again in\s+([0-9]+(?:\.[0-9]+)?)s",
+    # Match formats like:
+    # "try again in 5m2.832s" -> 5 * 60 + 2.832 = 302.832s
+    # "try again in 2s" -> 2.0s
+    match_ms = re.search(
+        r"try again in\s+(?:(\d+(?:\.\d+)?)\s*m\s*)?(\d+(?:\.\d+)?)\s*s",
         response.text,
         re.IGNORECASE,
     )
-    return float(match.group(1)) if match else None
+    if match_ms:
+        minutes = float(match_ms.group(1)) if match_ms.group(1) else 0.0
+        seconds = float(match_ms.group(2)) if match_ms.group(2) else 0.0
+        return minutes * 60.0 + seconds
+
+    match_m = re.search(r"try again in\s+(\d+(?:\.\d+)?)\s*m", response.text, re.IGNORECASE)
+    if match_m:
+        return float(match_m.group(1)) * 60.0
+
+    return None
+
 
 
 class GroqProvider:
@@ -80,6 +105,19 @@ class GroqProvider:
                     raise RuntimeError("Groq authentication failed") from exc
                 if status == 429:
                     retry_after = _retry_after_seconds(exc.response)
+                    is_tpd = _is_tpd_exhausted(exc.response)
+
+                    if is_tpd:
+                        logger.error(
+                            "Groq daily quota (TPD) exhausted. Reset interval: %s. Failing fast without retries.",
+                            f"{retry_after:.1f}s" if retry_after is not None else "unknown",
+                        )
+                        raise GroqRateLimitError(
+                            "Groq daily token limit (TPD) exhausted",
+                            retry_after=retry_after,
+                            limit_type="TPD",
+                        ) from exc
+
                     if attempt < self.max_retries:
                         delay = retry_after or settings.EVAL_PROVIDER_MIN_RETRY_DELAY
                         delay = min(
@@ -94,9 +132,11 @@ class GroqProvider:
                         )
                         await asyncio.sleep(delay)
                         continue
+
                     raise GroqRateLimitError(
                         "Groq rate limit exceeded after bounded retries",
                         retry_after=retry_after,
+                        limit_type="TPM",
                     ) from exc
                 if status == 404:
                     raise RuntimeError(f"Groq model not found: {self.model}") from exc

@@ -11,14 +11,14 @@ class Settings(BaseSettings):
 
     GROQ_API_KEY: str = ""
     GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
-    GROQ_MODEL: str = "openai/gpt-oss-120b"
+    GROQ_MODEL: str = "openai/gpt-oss-20b"
     GROQ_REASONING_EFFORT: str = "low"
 
     # Evaluation-only provider controls. These are not used by normal
     # WhatsApp request orchestration.
     EVAL_PROVIDER_MAX_RETRIES: int = 2
     EVAL_PROVIDER_MIN_RETRY_DELAY: float = 1.0
-    EVAL_PROVIDER_MAX_RETRY_DELAY: float = 60.0
+    EVAL_PROVIDER_MAX_RETRY_DELAY: float = 10.0
     EVAL_REQUEST_DELAY_SECONDS: float = 10.0
 
     twilio_account_sid: str = ""

@@ -173,7 +173,7 @@ async def test_goal_coaching_and_advisory_flow():
                 likely_needs_human=False,
                 reasoning="Account inquiry for goal",
             )
-        elif "500000" in lower:
+        elif "500000" in lower or "500,000" in lower or "school fees" in lower:
             return RequestTriageResult(
                 language="en",
                 needs_member_data=False,

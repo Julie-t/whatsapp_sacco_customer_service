@@ -22,14 +22,19 @@ class MemberRepository:
 
     @staticmethod
     def get_by_phone(phone_number: str) -> Member | None:
-        phone_hash = _hash_phone(phone_number)
+        hashes = [_hash_phone(phone_number)]
+        raw = phone_number.strip().replace(" ", "")
+        if raw.startswith("whatsapp:"):
+            hashes.append(_hash_phone(raw[len("whatsapp:"):]))
+        else:
+            hashes.append(_hash_phone(f"whatsapp:{raw}"))
         try:
             with get_connection() as conn, conn.cursor() as cur:
                 cur.execute(
                     "SELECT id, phone_hash, display_name, preferred_language, "
                     "knowledge_level, sacco_id, is_demo, created_at, updated_at "
-                    "FROM members WHERE phone_hash = %s",
-                    (phone_hash,),
+                    "FROM members WHERE phone_hash = ANY(%s)",
+                    (hashes,),
                 )
                 row = cur.fetchone()
                 if not row:
@@ -76,6 +81,50 @@ class MemberRepository:
         except Exception:
             logger.exception("Failed to look up member by id")
             return None
+
+    @staticmethod
+    def create_or_get_demo_member(
+        phone_number: str,
+        display_name: str = "Member",
+        sacco_id: str = "demo_sacco",
+    ) -> Member:
+        """Ensure a demo member row exists in PostgreSQL for foreign key constraints."""
+        phone_hash = _hash_phone(phone_number)
+        demo_id = f"demo_{phone_hash[:8]}"
+        try:
+            with get_connection() as conn, conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO members (id, phone_hash, display_name, preferred_language, knowledge_level, sacco_id, is_demo)
+                    VALUES (%s, %s, %s, 'en', 'beginner', %s, true)
+                    ON CONFLICT (phone_hash) DO UPDATE SET updated_at = CURRENT_TIMESTAMP
+                    RETURNING id, phone_hash, display_name, preferred_language, knowledge_level, sacco_id, is_demo, created_at, updated_at
+                    """,
+                    (demo_id, phone_hash, display_name, sacco_id),
+                )
+                row = cur.fetchone()
+                return Member(
+                    id=row[0],
+                    phone_hash=row[1],
+                    display_name=row[2],
+                    preferred_language=row[3],
+                    knowledge_level=row[4],
+                    sacco_id=row[5],
+                    is_demo=row[6],
+                    created_at=row[7],
+                    updated_at=row[8],
+                )
+        except Exception:
+            logger.exception("Failed to create or get demo member in DB")
+            return Member(
+                id=demo_id,
+                phone_hash=phone_hash,
+                display_name=display_name,
+                preferred_language="en",
+                knowledge_level="beginner",
+                sacco_id=sacco_id,
+                is_demo=True,
+            )
 
     @staticmethod
     def get_accounts(member_id: str) -> list[MemberAccount]:
