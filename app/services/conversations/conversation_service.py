@@ -103,6 +103,7 @@ async def handle_message_async(
     feedback_service: Any | None = None,
     auth_service: Any | None = None,
     query_rewriter: QueryRewriter | None = None,
+    voice_service: Any | None = None,
 ) -> str:
     """Process an incoming WhatsApp message and return a response.
 
@@ -122,7 +123,25 @@ async def handle_message_async(
         education_service=education_service,
         auth_service=auth_service,
         feedback_service=feedback_service,
+        voice_service=voice_service,
     )
+
+    # ── 0. Voice note transcription ───────────────────────────────────
+    from app.services.voice.voice_service import is_audio_content_type
+
+    if message.media_url and is_audio_content_type(message.media_content_type):
+        voice_result = await services.voice_service.process_voice_message(message)
+        if not voice_result.success:
+            return voice_result.user_fallback_message or FALLBACK_MESSAGE
+        message.body = voice_result.text
+        message.is_voice = True
+        message.raw_transcription = voice_result.text
+        logger.info(
+            "Voice message from %s transcribed (detected language=%s): %r",
+            message.from_number,
+            voice_result.language,
+            message.body,
+        )
 
     # ── 1. Pre-filter ─────────────────────────────────────────────────
     pre_filter = PreFilter(

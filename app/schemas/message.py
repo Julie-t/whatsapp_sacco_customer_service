@@ -12,7 +12,12 @@ class IncomingWhatsAppMessage(BaseModel):
     message_id: str | None = None
     from_number: str
     to_number: str | None = None
-    body: str
+    body: str = ""
     profile_name: str | None = None
     num_media: str | None = "0"
     received_at: str | None = None
+    media_url: str | None = None
+    media_content_type: str | None = None
+    is_voice: bool = False
+    raw_transcription: str | None = None
+

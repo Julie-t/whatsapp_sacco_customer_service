@@ -46,15 +46,25 @@ async def whatsapp_webhook(request: Request):
     body = form.get("Body", "")
     profile_name = form.get("ProfileName", "")
     num_media = form.get("NumMedia", "0")
+    media_url = form.get("MediaUrl0") or None
+    media_content_type = form.get("MediaContentType0") or None
 
-    logger.info("Processing message from=%s body=%r", from_number, body)
+    logger.info(
+        "Processing message from=%s body=%r num_media=%s media_content_type=%s",
+        from_number,
+        body,
+        num_media,
+        media_content_type,
+    )
 
     incoming = IncomingWhatsAppMessage(
         from_number=from_number,
         to_number=to_number,
-        body=body,
+        body=body or "",
         profile_name=profile_name or None,
         num_media=num_media,
+        media_url=media_url,
+        media_content_type=media_content_type,
     )
 
     response_body = await handle_message_async(incoming)

@@ -44,7 +44,8 @@ FALLBACK_MESSAGE = (
 )
 
 MEDIA_NOT_SUPPORTED = (
-    "I can't process media messages yet. Please type HELP to see how I can assist you."
+    "I can currently process text and voice messages only. Other media messages "
+    "(such as images or documents) are not supported yet. Please type HELP to see how I can assist you."
 )
 
 HUMAN_SUPPORT_PLACEHOLDER = (

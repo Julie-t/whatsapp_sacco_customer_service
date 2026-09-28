@@ -31,11 +31,21 @@ class Settings(BaseSettings):
     # ------------------------------------------------------------------
     # RAG / Retrieval infrastructure
     # ------------------------------------------------------------------
-    # Qdrant connection. Leave QDRANT_URL empty to use an in-memory
-    # instance (used by tests and lightweight local development).
+    # Qdrant connection. Configure QDRANT_URL, or configure QDRANT_HOST and QDRANT_PORT.
+    # Leave empty to use an in-memory instance (used by tests and lightweight local development).
     QDRANT_URL: str = ""
+    QDRANT_HOST: str = ""
+    QDRANT_PORT: int = 6333
     QDRANT_API_KEY: str = ""
     QDRANT_COLLECTION: str = "sacco_knowledge"
+
+    @property
+    def effective_qdrant_url(self) -> str:
+        if self.QDRANT_URL:
+            return self.QDRANT_URL
+        if self.QDRANT_HOST:
+            return f"http://{self.QDRANT_HOST}:{self.QDRANT_PORT}"
+        return ""
 
     # Embeddings. Use a sentence-transformers model that can run locally.
     # The embedding implementation is provider-agnostic and is not tied to a
@@ -71,6 +81,21 @@ class Settings(BaseSettings):
     SACCO_API_URL: str = ""
     SACCO_API_KEY: str = ""
     SACCO_API_TIMEOUT_SECONDS: float = 3.0
+
+    # ------------------------------------------------------------------
+    # Voice / Audio Transcription infrastructure (Groq Whisper)
+    # ------------------------------------------------------------------
+    GROQ_AUDIO_MODEL: str = "whisper-large-v3-turbo"
+    VOICE_ENABLED: bool = True
+    VOICE_PROMPT_BIAS: str = (
+        "Mazungumzo ya mwanachama wa SACCO kuhusu mikopo, hisa, akiba, na huduma za wanachama. "
+        "Code-switching in English, Kiswahili, and Kenyan Sheng: "
+        "chama, ganji, bob, chapaa, mkopo, mikopo, duka, bodaboda, biashara, kujiunga, fomu, "
+        "loan balance, emergency loan, dividends, shares, interest rate, repayment, M-Pesa."
+    )
+    MAX_AUDIO_SIZE_BYTES: int = 25 * 1024 * 1024  # 25 MB limit
+    VOICE_DOWNLOAD_TIMEOUT_SECONDS: float = 15.0
+    VOICE_TRANSCRIBE_TIMEOUT_SECONDS: float = 30.0
 
 
 settings = Settings()

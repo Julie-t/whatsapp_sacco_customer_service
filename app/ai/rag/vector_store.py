@@ -65,7 +65,7 @@ class QdrantVectorStore:
         vector_size: int | None = None,
     ):
         self.collection_name = collection_name or settings.QDRANT_COLLECTION
-        self.url = url if url is not None else settings.QDRANT_URL
+        self.url = url if url is not None else settings.effective_qdrant_url
         self.api_key = api_key if api_key is not None else settings.QDRANT_API_KEY
         self._vector_size = vector_size
         self._client = None

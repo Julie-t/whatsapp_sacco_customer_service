@@ -253,7 +253,7 @@ class AdminAnalyticsService:
         # 2. Qdrant
         qdrant_status = "healthy"
         try:
-            q_url = settings.QDRANT_URL or "http://127.0.0.1:6333"
+            q_url = settings.effective_qdrant_url or "http://127.0.0.1:6333"
             async with httpx.AsyncClient(timeout=2.0) as client:
                 res = await client.get(f"{q_url.rstrip('/')}/collections")
                 if res.status_code != 200:

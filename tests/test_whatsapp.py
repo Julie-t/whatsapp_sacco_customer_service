@@ -377,3 +377,37 @@ async def test_words_with_no_substring_not_hijacked_as_goal():
     assert "How much would you like to save" not in resp
 
 
+def test_whatsapp_webhook_with_voice_note():
+    """Verify that posting audio media to the webhook triggers voice handling and returns TwiML."""
+    from unittest.mock import AsyncMock, patch
+    from app.services.voice.voice_service import VoiceTranscriptionResult
+
+    with patch(
+        "app.services.voice.voice_service.VoiceService.process_voice_message",
+        new_callable=AsyncMock,
+    ) as mock_process:
+        mock_process.return_value = VoiceTranscriptionResult(
+            success=True,
+            text="Hello",
+            language="en",
+            duration=1.5,
+        )
+
+        response = client.post(
+            "/webhooks/whatsapp",
+            data={
+                "From": "whatsapp:+254700000000",
+                "To": "whatsapp:+254711111111",
+                "Body": "",
+                "NumMedia": "1",
+                "MediaUrl0": "https://api.twilio.com/2010-04-01/Accounts/AC123/Messages/MM123/Media/ME123",
+                "MediaContentType0": "audio/ogg",
+            },
+        )
+
+        assert response.status_code == 200
+        assert "<Response>" in response.text
+        assert "Karibu" in response.text
+
+
+

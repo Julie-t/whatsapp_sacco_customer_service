@@ -29,6 +29,7 @@ class ServiceContainer:
         auth_service: Any | None = None,
         feedback_service: Any | None = None,
         state_store: Any | None = None,
+        voice_service: Any | None = None,
     ) -> None:
         self._rag_answer_service = rag_answer_service
         self._query_rewriter = query_rewriter
@@ -39,6 +40,7 @@ class ServiceContainer:
         self._auth_service = auth_service
         self._feedback_service = feedback_service
         self._state_store = state_store
+        self._voice_service = voice_service
 
     # --- RAG ---
 
@@ -133,4 +135,15 @@ class ServiceContainer:
 
             self._state_store = get_runtime_state_store()
         return self._state_store
+
+    # --- Voice ---
+
+    @property
+    def voice_service(self) -> Any:
+        if self._voice_service is None:
+            from app.services.voice.voice_service import VoiceService
+
+            self._voice_service = VoiceService()
+        return self._voice_service
+
 
