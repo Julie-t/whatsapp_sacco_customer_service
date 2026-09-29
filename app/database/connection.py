@@ -32,7 +32,7 @@ def get_connection_params(url: str | None = None) -> dict:
 def get_connection():
     """Open a PostgreSQL connection using the configured database URL.
 
-    Supports Cloud SQL Unix sockets, Cloud SQL Auth Proxy, and standard TCP URLs.
+    Supports Unix sockets, standard TCP URLs, and managed cloud connection strings.
     """
     from app.config.settings import settings
 
