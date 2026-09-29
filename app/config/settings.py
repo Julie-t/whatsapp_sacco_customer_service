@@ -1,0 +1,101 @@
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    app_env: str = "development"
+
+    database_url: str = "postgresql://user:pass@localhost:5432/sacco"
+    conversation_retention_days: int = 90
+
+    GROQ_API_KEY: str = ""
+    GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
+    GROQ_MODEL: str = "openai/gpt-oss-20b"
+    GROQ_REASONING_EFFORT: str = "low"
+
+    # Evaluation-only provider controls. These are not used by normal
+    # WhatsApp request orchestration.
+    EVAL_PROVIDER_MAX_RETRIES: int = 2
+    EVAL_PROVIDER_MIN_RETRY_DELAY: float = 1.0
+    EVAL_PROVIDER_MAX_RETRY_DELAY: float = 10.0
+    EVAL_REQUEST_DELAY_SECONDS: float = 10.0
+
+    twilio_account_sid: str = ""
+    twilio_auth_token: str = ""
+    twilio_whatsapp_from: str = ""
+    twilio_validate_signature: bool = False
+
+    ngrok_authtoken: str = ""
+
+    # ------------------------------------------------------------------
+    # RAG / Retrieval infrastructure
+    # ------------------------------------------------------------------
+    # Qdrant connection. Configure QDRANT_URL, or configure QDRANT_HOST and QDRANT_PORT.
+    # Leave empty to use an in-memory instance (used by tests and lightweight local development).
+    QDRANT_URL: str = ""
+    QDRANT_HOST: str = ""
+    QDRANT_PORT: int = 6333
+    QDRANT_API_KEY: str = ""
+    QDRANT_COLLECTION: str = "sacco_knowledge"
+
+    @property
+    def effective_qdrant_url(self) -> str:
+        if self.QDRANT_URL:
+            return self.QDRANT_URL
+        if self.QDRANT_HOST:
+            return f"http://{self.QDRANT_HOST}:{self.QDRANT_PORT}"
+        return ""
+
+    # Embeddings. Use a sentence-transformers model that can run locally.
+    # The embedding implementation is provider-agnostic and is not tied to a
+    # specific LLM provider. Override EMBEDDING_MODEL to swap the model.
+    EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
+
+    # Retrieval defaults
+    RAG_TOP_K: int = 5
+    # Minimum similarity score prevents unrelated chunks from being presented
+    # as evidence when a collection has no relevant match.
+    RAG_MIN_SCORE: float = 0.2
+    RAG_ANSWER_MAX_TOKENS: int = 500
+    RAG_ANSWER_TEMPERATURE: float = 0.2
+
+    # Deterministic chunking parameters (character based with overlap).
+    RAG_CHUNK_SIZE: int = 1000
+    RAG_CHUNK_OVERLAP: int = 200
+    # Minimum size for a trailing chunk before it is merged into the previous
+    # chunk. Avoids tiny fragments at the end of a document.
+    RAG_CHUNK_MIN_SIZE: int = 200
+
+    # Demo SACCO identifier used before real multi-tenant ingestion exists.
+    # Kept as configuration so the engine is never hardcoded to one SACCO.
+    DEFAULT_SACCO_ID: str = "demo_sacco"
+
+    # Member data demo mode — when True, responses from the member-data
+    # service include a "(demo data)" label for transparency during testing.
+    MEMBER_DATA_DEMO_MODE: bool = True
+
+    # System 12: Production Authentication and Core SACCO Integration
+    REQUIRE_MEMBER_AUTH: bool = False
+    MEMBER_SESSION_TTL_MINUTES: int = 15
+    SACCO_API_URL: str = ""
+    SACCO_API_KEY: str = ""
+    SACCO_API_TIMEOUT_SECONDS: float = 3.0
+
+    # ------------------------------------------------------------------
+    # Voice / Audio Transcription infrastructure (Groq Whisper)
+    # ------------------------------------------------------------------
+    GROQ_AUDIO_MODEL: str = "whisper-large-v3-turbo"
+    VOICE_ENABLED: bool = True
+    VOICE_PROMPT_BIAS: str = (
+        "Mazungumzo ya mwanachama wa SACCO kuhusu mikopo, hisa, akiba, na huduma za wanachama. "
+        "Code-switching in English, Kiswahili, and Kenyan Sheng: "
+        "chama, ganji, bob, chapaa, mkopo, mikopo, duka, bodaboda, biashara, kujiunga, fomu, "
+        "loan balance, emergency loan, dividends, shares, interest rate, repayment, M-Pesa."
+    )
+    MAX_AUDIO_SIZE_BYTES: int = 25 * 1024 * 1024  # 25 MB limit
+    VOICE_DOWNLOAD_TIMEOUT_SECONDS: float = 15.0
+    VOICE_TRANSCRIBE_TIMEOUT_SECONDS: float = 30.0
+
+
+settings = Settings()

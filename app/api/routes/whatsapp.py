@@ -1,0 +1,73 @@
+import logging
+from urllib.parse import parse_qs
+
+from fastapi import APIRouter, Request
+from fastapi.responses import Response
+from twilio.request_validator import RequestValidator
+
+from app.config.settings import settings
+from app.schemas.message import IncomingWhatsAppMessage
+from app.services.conversations.conversation_service import handle_message_async
+from app.services.conversations.whatsapp_service import WhatsAppService
+
+logger = logging.getLogger(__name__)
+router = APIRouter()
+
+_whatsapp_service = WhatsAppService()
+
+
+def _validate_twilio_request(request: Request, body_bytes: bytes) -> bool:
+    if not settings.twilio_validate_signature:
+        return True
+
+    if not settings.twilio_auth_token:
+        return True
+
+    validator = RequestValidator(settings.twilio_auth_token)
+    url = str(request.url)
+    signature = request.headers.get("X-Twilio-Signature", "")
+    parsed = parse_qs(body_bytes.decode("utf-8"), keep_blank_values=True)
+    params = {k: v[0] if len(v) == 1 else v for k, v in parsed.items()}
+    return validator.validate(url, params, signature)
+
+
+@router.post("/webhooks/whatsapp")
+@router.post("/")
+async def whatsapp_webhook(request: Request):
+    body_bytes = await request.body()
+    logger.info("Webhook received: %s", body_bytes[:500])
+    if not _validate_twilio_request(request, body_bytes):
+        logger.warning("Invalid Twilio webhook signature")
+        return Response(content="", status_code=403)
+
+    form = await request.form()
+    from_number = form.get("From", "")
+    to_number = form.get("To", "")
+    body = form.get("Body", "")
+    profile_name = form.get("ProfileName", "")
+    num_media = form.get("NumMedia", "0")
+    media_url = form.get("MediaUrl0") or None
+    media_content_type = form.get("MediaContentType0") or None
+
+    logger.info(
+        "Processing message from=%s body=%r num_media=%s media_content_type=%s",
+        from_number,
+        body,
+        num_media,
+        media_content_type,
+    )
+
+    incoming = IncomingWhatsAppMessage(
+        from_number=from_number,
+        to_number=to_number,
+        body=body or "",
+        profile_name=profile_name or None,
+        num_media=num_media,
+        media_url=media_url,
+        media_content_type=media_content_type,
+    )
+
+    response_body = await handle_message_async(incoming)
+    twiml = _whatsapp_service.build_twiml_response(response_body)
+    logger.info("Webhook response: %s", twiml[:500])
+    return Response(content=twiml, media_type="application/xml")
