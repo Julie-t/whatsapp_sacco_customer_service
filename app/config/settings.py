@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     GROQ_API_KEY: str = ""
     GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
     GROQ_MODEL: str = "openai/gpt-oss-20b"
-    GROQ_REASONING_EFFORT: str = "medium"
+    GROQ_REASONING_EFFORT: str = "low"
 
     # Evaluation-only provider controls. These are not used by normal
     # WhatsApp request orchestration.
