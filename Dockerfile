@@ -28,7 +28,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Pre-download and bake Sentence Transformer model weights into image layer
 # This guarantees sub-second container startup without dynamic downloads from Hugging Face
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')"
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')" && \
+    chmod -R a+rX /app/model_cache
+
+# Enforce offline mode for Hugging Face and Transformers during container execution
+ENV HF_HUB_OFFLINE=1 \
+    TRANSFORMERS_OFFLINE=1
 
 # Copy application code, migrations, and static assets
 COPY app/ ./app/
