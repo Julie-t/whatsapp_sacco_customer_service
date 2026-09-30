@@ -36,6 +36,12 @@ def _run_warmup():
     except Exception as exc:
         logger.warning("Conversation services warmup skipped or failed: %s", exc)
 
+    try:
+        from app.database.bootstrap import bootstrap_database
+        bootstrap_database()
+    except Exception as exc:
+        logger.warning("Database bootstrap skipped or failed: %s", exc)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
