@@ -4,7 +4,12 @@ import psycopg2
 
 
 def get_database_url() -> str:
-    return os.getenv("DATABASE_URL", "postgresql://user:pass@localhost:5432/sacco")
+    return (
+        os.getenv("DATABASE_URL")
+        or os.getenv("DATABASE_PRIVATE_URL")
+        or os.getenv("DATABASE_PUBLIC_URL")
+        or "postgresql://user:pass@localhost:5432/sacco"
+    )
 
 
 def get_connection_params(url: str | None = None) -> dict:
@@ -36,7 +41,13 @@ def get_connection():
     """
     from app.config.settings import settings
 
-    url = settings.database_url or get_database_url()
+    url = (
+        os.getenv("DATABASE_URL")
+        or os.getenv("DATABASE_PRIVATE_URL")
+        or os.getenv("DATABASE_PUBLIC_URL")
+        or settings.database_url
+        or get_database_url()
+    )
     try:
         # psycopg2.connect natively accepts full DSN strings including Unix sockets & sslmode
         return psycopg2.connect(url, connect_timeout=5)
