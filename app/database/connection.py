@@ -32,15 +32,18 @@ def get_connection_params(url: str | None = None) -> dict:
 def get_connection():
     """Open a PostgreSQL connection using the configured database URL.
 
-    Supports Cloud SQL Unix sockets, Cloud SQL Auth Proxy, and standard TCP URLs.
+    Supports Unix sockets, standard TCP URLs, and managed cloud connection strings.
     """
     from app.config.settings import settings
 
     url = settings.database_url or get_database_url()
     try:
         # psycopg2.connect natively accepts full DSN strings including Unix sockets & sslmode
-        return psycopg2.connect(url)
+        return psycopg2.connect(url, connect_timeout=5)
     except Exception:
         # Fallback to parsed parameter mapping
-        return psycopg2.connect(**get_connection_params(url))
+        params = get_connection_params(url)
+        params.setdefault("connect_timeout", 5)
+        return psycopg2.connect(**params)
+
 

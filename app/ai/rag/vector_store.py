@@ -81,7 +81,7 @@ class QdrantVectorStore:
             if self.url:
                 try:
                     logger.info("Connecting to Qdrant at %s", self.url)
-                    remote_client = QdrantClient(url=self.url, api_key=self.api_key or None)
+                    remote_client = QdrantClient(url=self.url, api_key=self.api_key or None, timeout=5.0)
                     remote_client.get_collections()
                     self._client = remote_client
                 except Exception as conn_err:

@@ -1,25 +1,30 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
-
 from pathlib import Path
+from time import perf_counter
+
+from fastapi import FastAPI, Response
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
 logger = logging.getLogger(__name__)
-# Reload triggered to load updated environment configuration
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Pre-warm models and services on startup to eliminate cold-start latency for webhooks."""
+def _run_warmup():
+    """Synchronous warmup of embedding models and singletons."""
     try:
         from app.ai.rag.pipeline import _default_embedding_provider
-        logger.info("Pre-warming embedding model on startup...")
         provider = _default_embedding_provider()
         provider.embed_query("warmup")
-        logger.info("Embedding model warmed up successfully.")
+    except Exception as exc:
+        logger.warning("Startup embedding model warmup skipped or failed: %s", exc)
 
+    try:
         from app.services.conversations.conversation_service import (
             _get_rag_answer_service,
             _get_query_rewriter,
@@ -28,9 +33,24 @@ async def lifespan(app: FastAPI):
         _get_rag_answer_service()
         _get_query_rewriter()
         _get_education_service()
-        logger.info("Conversation services pre-warmed.")
     except Exception as exc:
-        logger.warning("Startup model warmup skipped or failed: %s", exc)
+        logger.warning("Conversation services warmup skipped or failed: %s", exc)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Pre-warm models and services on startup with a strict timeout to ensure fast boot."""
+    t0 = perf_counter()
+    logger.info("Application starting up: running pre-warming routines...")
+    try:
+        await asyncio.wait_for(asyncio.to_thread(_run_warmup), timeout=12.0)
+        logger.info("Pre-warming routines completed in %.2fs.", perf_counter() - t0)
+    except asyncio.TimeoutError:
+        logger.warning("Startup pre-warming timed out after 12s; continuing boot without blocking.")
+    except Exception as exc:
+        logger.warning("Startup pre-warming encountered an error: %s", exc)
+
+    logger.info("Total startup time: %.2fs. Application is ready to receive requests.", perf_counter() - t0)
     yield
 
 
@@ -67,6 +87,24 @@ dashboard_path = Path(__file__).parent / "static" / "dashboard"
 if dashboard_path.exists():
     app.mount("/dashboard", StaticFiles(directory=str(dashboard_path), html=True), name="dashboard")
 
+
+@app.get("/")
+def root():
+    """Root landing: redirect to the interactive dashboard if available."""
+    if dashboard_path.exists():
+        return RedirectResponse(url="/dashboard")
+    return {
+        "status": "online",
+        "service": "SACCO AI Companion & Admin Operations",
+        "health": "/health",
+        "docs": "/docs",
+    }
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    """Return empty response for browser favicon requests to avoid 404 noise."""
+    return Response(status_code=204)
 
 
 @app.get("/health")
