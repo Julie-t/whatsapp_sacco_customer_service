@@ -48,7 +48,23 @@ def get_knowledge_service() -> AdminKnowledgeService:
 # ---------------------------------------------------------------------------
 @router.post("/auth/login", response_model=LoginResponse, summary="Staff administrator login")
 def login(req: LoginRequest, auth_svc: AdminAuthService = Depends(get_auth_service)):
-    auth_res = auth_svc.authenticate(req.username, req.password)
+    try:
+        auth_res = auth_svc.authenticate(req.username, req.password)
+    except Exception as exc:
+        logger.error("Admin login error: %s", exc, exc_info=True)
+        # Attempt fallback auto-bootstrap if table or user was missing
+        try:
+            from app.database.bootstrap import bootstrap_database
+            if bootstrap_database():
+                auth_res = auth_svc.authenticate(req.username, req.password)
+                if auth_res:
+                    return auth_res
+        except Exception:
+            pass
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database authentication error: {exc}",
+        )
     if not auth_res:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
